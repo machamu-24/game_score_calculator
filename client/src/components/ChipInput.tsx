@@ -40,23 +40,17 @@ export function ChipInput({ isOpen, onClose }: ChipInputProps) {
     });
 
     if (hasError) {
-      setError("Please enter valid numbers.");
+      setError("有効な数値を入力してください。");
       return;
     }
 
-    // Zero-sum check for chips? Usually chips are zero-sum (someone pays, someone receives).
-    // But sometimes it's just bonus. Let's warn if not zero-sum but allow it?
-    // Or strictly enforce zero-sum.
-    // "Chip" usually implies exchange. Let's enforce zero-sum for consistency, 
-    // or at least warn. Let's enforce it to prevent mistakes.
     if (total !== 0) {
-      setError(`Total chip amount must be 0. Current total: ${total > 0 ? "+" : ""}${total}`);
+      setError(`チップの合計は0になる必要があります。現在の合計: ${total > 0 ? "+" : ""}${total}`);
       return;
     }
 
-    // Check if all zero
     if (Object.values(parsedAmounts).every(v => v === 0)) {
-      setError("Please enter at least one chip movement.");
+      setError("少なくとも1つのチップ移動を入力してください。");
       return;
     }
 
@@ -71,12 +65,12 @@ export function ChipInput({ isOpen, onClose }: ChipInputProps) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="glass-panel border-0 sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-center">Record Chips</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-center">チップ入力</DialogTitle>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
           <p className="text-sm text-muted-foreground text-center mb-2">
-            Enter chip amounts (e.g., +5, -5). Total must be 0.
+            チップの枚数またはポイントを入力してください（合計0）
           </p>
 
           {session.players.map((player) => (
@@ -97,14 +91,14 @@ export function ChipInput({ isOpen, onClose }: ChipInputProps) {
 
           <div className="grid grid-cols-4 items-center gap-4 mt-2">
             <Label htmlFor="chip-note" className="text-right col-span-1 font-medium">
-              Note
+              メモ
             </Label>
             <Input
               id="chip-note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className="col-span-3 glass-input border-0"
-              placeholder="Optional (e.g. Yakitori)"
+              placeholder="任意（例: 焼き鳥）"
             />
           </div>
           
@@ -120,7 +114,7 @@ export function ChipInput({ isOpen, onClose }: ChipInputProps) {
             onClick={handleSubmit} 
             className="w-full sm:w-auto min-w-[120px] bg-primary text-primary-foreground hover:bg-primary/90"
           >
-            Add Chips
+            追加
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -43,19 +43,19 @@ export function SettingsDialog() {
       </DialogTrigger>
       <DialogContent className="glass-panel border-0">
         <DialogHeader>
-          <DialogTitle>Game Settings</DialogTitle>
+          <DialogTitle>ゲーム設定</DialogTitle>
         </DialogHeader>
         <div className="grid gap-6 py-4">
           <div className="space-y-4">
-            <h4 className="font-medium leading-none">Rank Points</h4>
+            <h4 className="font-medium leading-none">順位点（ウマ・オカ）</h4>
             <p className="text-sm text-muted-foreground">
-              Points awarded for 1st, 2nd, 3rd, and 4th place.
+              1位〜4位に付与されるポイントを設定してください。
             </p>
             <div className="grid grid-cols-4 gap-2">
               {rankPoints.map((point, index) => (
                 <div key={index} className="space-y-2">
                   <Label className="text-xs text-center block text-muted-foreground">
-                    {index + 1}{index === 0 ? "st" : index === 1 ? "nd" : index === 2 ? "rd" : "th"}
+                    {index + 1}位
                   </Label>
                   <Input
                     type="number"
@@ -74,7 +74,7 @@ export function SettingsDialog() {
         </div>
         <DialogFooter>
           <Button onClick={handleSave} className="bg-primary text-primary-foreground hover:bg-primary/90">
-            Save Changes
+            設定を保存
           </Button>
         </DialogFooter>
       </DialogContent>

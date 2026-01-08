@@ -11,15 +11,6 @@ export function ScoreTable() {
 
   if (!session) return null;
 
-  // Combine games and chip logs into a single timeline if desired, 
-  // or just show games table and chips summary?
-  // User asked for "independent chip balance".
-  // Let's show Games Table first, then a Chip Log table or summary row.
-  // Actually, a unified timeline is often best, but let's keep it simple:
-  // 1. Games Table
-  // 2. Chip Logs Table (collapsible or separate)
-  // 3. Grand Total Row
-
   const reversedGames = [...session.games].reverse();
   const reversedChips = [...session.chipLogs].reverse();
 
@@ -27,7 +18,7 @@ export function ScoreTable() {
     <div className="space-y-8">
       {/* Games Table */}
       <div className="rounded-xl overflow-hidden glass-panel border-0">
-        <div className="p-4 font-bold text-lg border-b border-white/10">Games</div>
+        <div className="p-4 font-bold text-lg border-b border-white/10">ゲーム履歴</div>
         <Table>
           <TableHeader className="bg-white/5">
             <TableRow className="hover:bg-transparent border-white/10">
@@ -37,14 +28,14 @@ export function ScoreTable() {
                   {p.name}
                 </TableHead>
               ))}
-              <TableHead className="w-[80px] text-center">Actions</TableHead>
+              <TableHead className="w-[80px] text-center">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {reversedGames.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={session.players.length + 2} className="text-center py-8 text-muted-foreground">
-                  No games recorded yet.
+                  まだゲーム記録がありません。
                 </TableCell>
               </TableRow>
             ) : (
@@ -77,7 +68,7 @@ export function ScoreTable() {
                               {score > 0 ? "+" : ""}{score}
                             </span>
                             <span className={`text-[10px] uppercase tracking-wider font-bold ${rankColor}`}>
-                              {rank === 1 ? "1st" : rank === 2 ? "2nd" : rank === 3 ? "3rd" : "4th"}
+                              {rank === 1 ? "1位" : rank === 2 ? "2位" : rank === 3 ? "3位" : "4位"}
                             </span>
                           </div>
                         </TableCell>
@@ -110,7 +101,7 @@ export function ScoreTable() {
             
             {/* Game Subtotal */}
             <TableRow className="bg-white/5 font-medium border-t-2 border-white/10">
-              <TableCell className="text-center text-muted-foreground text-xs">Subtotal</TableCell>
+              <TableCell className="text-center text-muted-foreground text-xs">小計</TableCell>
               {session.players.map(p => {
                 const total = session.totalGamePoints[p.id];
                 return (
@@ -132,7 +123,7 @@ export function ScoreTable() {
         <div className="rounded-xl overflow-hidden glass-panel border-0">
           <div className="p-4 font-bold text-lg border-b border-white/10 flex items-center gap-2">
             <Coins className="w-5 h-5 text-yellow-500" />
-            Chips / Adjustments
+            チップ / 調整
           </div>
           <Table>
             <TableBody>
@@ -170,7 +161,7 @@ export function ScoreTable() {
               
               {/* Chip Subtotal */}
               <TableRow className="bg-white/5 font-medium border-t-2 border-white/10">
-                <TableCell className="text-center text-muted-foreground text-xs">Chips</TableCell>
+                <TableCell className="text-center text-muted-foreground text-xs">チップ計</TableCell>
                 {session.players.map(p => {
                   const total = session.totalChips[p.id];
                   return (
@@ -193,7 +184,7 @@ export function ScoreTable() {
         <Table>
           <TableBody>
             <TableRow className="hover:bg-transparent border-0">
-              <TableCell className="w-[60px] text-center font-bold text-primary">TOTAL</TableCell>
+              <TableCell className="w-[60px] text-center font-bold text-primary">合計</TableCell>
               {session.players.map(p => {
                 const total = session.grandTotal[p.id];
                 return (

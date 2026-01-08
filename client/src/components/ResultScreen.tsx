@@ -52,14 +52,14 @@ export function ResultScreen({ isOpen, onClose }: ResultScreenProps) {
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center flex items-center justify-center gap-2">
             <Trophy className="w-6 h-6 text-yellow-500" />
-            Session Results
+            最終結果
           </DialogTitle>
         </DialogHeader>
 
         <div className="py-6 space-y-8">
           {/* Winner Section */}
           <div className="text-center space-y-2 bg-gradient-to-b from-yellow-500/20 to-transparent p-6 rounded-2xl border border-yellow-500/30">
-            <div className="text-sm text-yellow-500 font-bold uppercase tracking-widest">Winner</div>
+            <div className="text-sm text-yellow-500 font-bold uppercase tracking-widest">優勝</div>
             <div className="text-4xl font-bold text-foreground">{winner.name}</div>
             <div className="text-5xl font-mono font-bold text-yellow-500">
               {winner.totalScore > 0 ? "+" : ""}{winner.totalScore}
@@ -70,7 +70,7 @@ export function ResultScreen({ isOpen, onClose }: ResultScreenProps) {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Medal className="w-5 h-5" />
-              Final Standings
+              ランキング
             </h3>
             <div className="grid gap-3">
               {stats.map((player, index) => (
@@ -84,15 +84,15 @@ export function ResultScreen({ isOpen, onClose }: ResultScreenProps) {
                     <div className="text-2xl font-mono font-bold">
                       {player.totalScore > 0 ? "+" : ""}{player.totalScore}
                     </div>
-                    <div className="text-xs text-muted-foreground">Total</div>
+                    <div className="text-xs text-muted-foreground">合計</div>
                   </div>
                   <div className="col-span-2 text-right px-2 border-r border-white/10">
                     <div className="font-mono text-sm">{player.gamePoints > 0 ? "+" : ""}{player.gamePoints}</div>
-                    <div className="text-[10px] text-muted-foreground">Score</div>
+                    <div className="text-[10px] text-muted-foreground">スコア</div>
                   </div>
                   <div className="col-span-2 text-right pl-2">
                     <div className="font-mono text-sm">{player.chips > 0 ? "+" : ""}{player.chips}</div>
-                    <div className="text-[10px] text-muted-foreground">Chips</div>
+                    <div className="text-[10px] text-muted-foreground">チップ</div>
                   </div>
                 </div>
               ))}
@@ -103,7 +103,7 @@ export function ResultScreen({ isOpen, onClose }: ResultScreenProps) {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Hash className="w-5 h-5" />
-              Detailed Stats
+              詳細データ
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {stats.map(player => (
@@ -113,23 +113,23 @@ export function ResultScreen({ isOpen, onClose }: ResultScreenProps) {
                   </div>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Avg Rank</span>
+                      <span className="text-muted-foreground">平均順位</span>
                       <span className="font-mono font-bold">{player.avgRank}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-yellow-500">1st</span>
+                      <span className="text-yellow-500">1位</span>
                       <span className="font-mono">{player.firstCount}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">2nd</span>
+                      <span className="text-gray-400">2位</span>
                       <span className="font-mono">{player.secondCount}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-amber-700">3rd</span>
+                      <span className="text-amber-700">3位</span>
                       <span className="font-mono">{player.thirdCount}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">4th</span>
+                      <span className="text-muted-foreground">4位</span>
                       <span className="font-mono">{player.fourthCount}</span>
                     </div>
                   </div>
@@ -141,7 +141,7 @@ export function ResultScreen({ isOpen, onClose }: ResultScreenProps) {
 
         <div className="flex justify-center pb-4">
           <Button onClick={onClose} variant="outline" className="min-w-[120px]">
-            Close
+            閉じる
           </Button>
         </div>
       </DialogContent>

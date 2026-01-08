@@ -37,10 +37,10 @@ function GameDashboard() {
       <header className="flex flex-col md:flex-row justify-between items-center gap-4 glass-panel p-6 rounded-2xl">
         <div>
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
-            Game Score Calculator
+            ゲーム点数計算
           </h1>
           <p className="text-muted-foreground mt-1">
-            Session started at {new Date(session.startedAt).toLocaleTimeString()}
+            開始時刻: {new Date(session.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </p>
         </div>
         
@@ -53,27 +53,27 @@ function GameDashboard() {
             onClick={() => setIsResultOpen(true)}
           >
             <Trophy className="w-4 h-4 mr-2" />
-            Result
+            結果
           </Button>
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" className="border-destructive/50 text-destructive hover:bg-destructive/10">
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Reset
+                リセット
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent className="glass-panel">
               <AlertDialogHeader>
-                <AlertDialogTitle>End Session?</AlertDialogTitle>
+                <AlertDialogTitle>セッションを終了しますか？</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will clear all current game data. This action cannot be undone.
+                  現在のゲームデータはすべて消去されます。この操作は取り消せません。
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>キャンセル</AlertDialogCancel>
                 <AlertDialogAction onClick={resetSession} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                  End Session
+                  終了する
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -88,14 +88,14 @@ function GameDashboard() {
           className="bg-secondary text-secondary-foreground shadow-lg hover:shadow-secondary/25 hover:scale-105 transition-all"
         >
           <Coins className="w-5 h-5 mr-2" />
-          Add Chips
+          チップ入力
         </Button>
         <Button 
           onClick={() => setIsInputOpen(true)} 
           className="bg-primary text-primary-foreground shadow-lg hover:shadow-primary/25 hover:scale-105 transition-all"
         >
           <Plus className="w-5 h-5 mr-2" />
-          Add Game
+          ゲーム入力
         </Button>
       </div>
 

@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useGame } from "@/contexts/GameContext";
-import { Player } from "@/lib/types";
 
 interface ScoreInputProps {
   isOpen: boolean;
@@ -67,21 +66,19 @@ export function ScoreInput({ isOpen, onClose, gameId, initialRanks, initialAdjus
       const adjStr = adjustments[p.id];
       const adj = adjStr === "" ? 0 : parseInt(adjStr);
       if (isNaN(adj)) {
-        // Allow empty, but if typed and NaN, it's error? 
-        // Let's assume empty is 0. If user typed "abc", it's NaN.
-        if (adjStr !== "" && adjStr !== "-") hasError = true; // Simple check
+        if (adjStr !== "" && adjStr !== "-") hasError = true;
       }
       parsedAdjustments[p.id] = isNaN(adj) ? 0 : adj;
     });
 
     if (hasError) {
-      setError("Please ensure all ranks are selected and adjustments are valid numbers.");
+      setError("すべての順位を選択し、調整点には有効な数値を入力してください。");
       return;
     }
 
     // Validate unique ranks
     if (rankCounts.size !== 4) {
-      setError("Each rank (1st, 2nd, 3rd, 4th) must be assigned to exactly one player.");
+      setError("各順位（1位〜4位）は必ず1人のプレイヤーに割り当ててください。");
       return;
     }
 
@@ -100,15 +97,15 @@ export function ScoreInput({ isOpen, onClose, gameId, initialRanks, initialAdjus
       <DialogContent className="glass-panel border-0 sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-center">
-            {gameId ? "Edit Game Result" : "Enter Game Result"}
+            {gameId ? "ゲーム結果の編集" : "ゲーム結果の入力"}
           </DialogTitle>
         </DialogHeader>
         
         <div className="grid gap-6 py-4">
           <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground text-center mb-2">
-            <div className="col-span-4 text-left pl-2">Player</div>
-            <div className="col-span-4">Rank</div>
-            <div className="col-span-4">Adjustment</div>
+            <div className="col-span-4 text-left pl-2">プレイヤー</div>
+            <div className="col-span-4">順位</div>
+            <div className="col-span-4">調整点</div>
           </div>
 
           {session.players.map((player) => (
@@ -126,10 +123,10 @@ export function ScoreInput({ isOpen, onClose, gameId, initialRanks, initialAdjus
                     <SelectValue placeholder="-" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">1st</SelectItem>
-                    <SelectItem value="2">2nd</SelectItem>
-                    <SelectItem value="3">3rd</SelectItem>
-                    <SelectItem value="4">4th</SelectItem>
+                    <SelectItem value="1">1位</SelectItem>
+                    <SelectItem value="2">2位</SelectItem>
+                    <SelectItem value="3">3位</SelectItem>
+                    <SelectItem value="4">4位</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -158,7 +155,7 @@ export function ScoreInput({ isOpen, onClose, gameId, initialRanks, initialAdjus
             onClick={validateAndSubmit} 
             className="w-full sm:w-auto min-w-[120px] bg-primary text-primary-foreground hover:bg-primary/90"
           >
-            Save Result
+            保存
           </Button>
         </DialogFooter>
       </DialogContent>
