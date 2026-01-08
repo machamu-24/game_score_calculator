@@ -1,65 +1,32 @@
 import { GameSettings, Player } from "./types";
 
 /**
- * Calculate final points for a single game based on raw scores and settings.
- * Assumes 4 players.
+ * Calculate final points for a single game based on ranks and adjustments.
  */
 export function calculateGamePoints(
-  rawScores: Record<string, number>,
+  ranks: Record<string, number>,
+  adjustments: Record<string, number>,
   settings: GameSettings,
   players: Player[]
-): { finalPoints: Record<string, number>; ranks: Record<string, number> } {
-  const playerIds = players.map((p) => p.id);
-  
-  // 1. Sort players by raw score (descending)
-  // Handle tie-breaks: currently random or based on ID order (could be improved to seat order)
-  const sortedPlayers = [...playerIds].sort((a, b) => {
-    const scoreA = rawScores[a] || 0;
-    const scoreB = rawScores[b] || 0;
-    return scoreB - scoreA;
-  });
-
-  const ranks: Record<string, number> = {};
+): { finalPoints: Record<string, number> } {
   const finalPoints: Record<string, number> = {};
 
-  // 2. Calculate points
-  // Formula: (RawScore - ReturnScore) / 1000 + Uma + (Oka if 1st)
-  
-  // Total score check (should be InitialScore * 4)
-  // But in calculation, we use ReturnScore as baseline.
-  
-  sortedPlayers.forEach((pid, index) => {
-    ranks[pid] = index + 1; // 1-based rank
+  players.forEach((player) => {
+    const rank = ranks[player.id]; // 1, 2, 3, 4
+    const adjustment = adjustments[player.id] || 0;
     
-    const rawScore = rawScores[pid] || 0;
+    // Get base point from rank (0-indexed array, so rank-1)
+    // If rank is invalid (e.g. 0 or undefined), default to 0 points (or handle error)
+    const rankPoint = rank >= 1 && rank <= 4 ? settings.rankPoints[rank - 1] : 0;
     
-    // Basic point calculation: (Score - ReturnScore) / 1000
-    // Rounding: usually round to nearest integer or 1 decimal place. 
-    // Mahjong standard: usually round half up or down depending on rules.
-    // Here we use simple float calculation first.
-    let point = (rawScore - settings.returnScore) / 1000;
-    
-    // Add Uma
-    point += settings.uma[index];
-    
-    // Add Oka to 1st place
-    if (index === 0) {
-      point += settings.oka;
-    }
-    
-    finalPoints[pid] = parseFloat(point.toFixed(1));
+    finalPoints[player.id] = rankPoint + adjustment;
   });
 
-  // 3. Adjust for floating point errors or total sum consistency if needed
-  // In standard Mahjong, the sum of points should be 0.
-  // Let's verify and adjust the top player's score if there's a mismatch due to rounding?
-  // For now, we assume simple calculation.
-  
-  return { finalPoints, ranks };
+  return { finalPoints };
 }
 
 export function calculateTotalPoints(
-  games: { finalPoints: Record<string, number>; adjustments?: Record<string, number> }[],
+  games: { finalPoints: Record<string, number> }[],
   playerIds: string[]
 ): Record<string, number> {
   const totals: Record<string, number> = {};
@@ -71,14 +38,8 @@ export function calculateTotalPoints(
   games.forEach(game => {
     playerIds.forEach(pid => {
       const gamePoint = game.finalPoints[pid] || 0;
-      const adjustment = game.adjustments?.[pid] || 0;
-      totals[pid] += gamePoint + adjustment;
+      totals[pid] += gamePoint;
     });
-  });
-
-  // Round to 1 decimal
-  playerIds.forEach(pid => {
-    totals[pid] = parseFloat(totals[pid].toFixed(1));
   });
 
   return totals;

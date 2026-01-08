@@ -6,9 +6,10 @@ import { nanoid } from "nanoid";
 interface GameContextType {
   session: Session | null;
   startNewSession: (players: Player[], settings: GameSettings) => void;
-  addGame: (rawScores: Record<string, number>, adjustments?: Record<string, number>) => void;
-  updateGame: (gameId: string, rawScores: Record<string, number>, adjustments?: Record<string, number>) => void;
+  addGame: (ranks: Record<string, number>, adjustments?: Record<string, number>) => void;
+  updateGame: (gameId: string, ranks: Record<string, number>, adjustments?: Record<string, number>) => void;
   deleteGame: (gameId: string) => void;
+  updateSettings: (newSettings: GameSettings) => void;
   resetSession: () => void;
 }
 
@@ -16,16 +17,15 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(() => {
-    // Load from local storage if available
-    const saved = localStorage.getItem("mahjong_session");
+    const saved = localStorage.getItem("mahjong_session_v2");
     return saved ? JSON.parse(saved) : null;
   });
 
   useEffect(() => {
     if (session) {
-      localStorage.setItem("mahjong_session", JSON.stringify(session));
+      localStorage.setItem("mahjong_session_v2", JSON.stringify(session));
     } else {
-      localStorage.removeItem("mahjong_session");
+      localStorage.removeItem("mahjong_session_v2");
     }
   }, [session]);
 
@@ -38,30 +38,22 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       games: [],
       totalPoints: {},
     };
-    // Initialize totals
     players.forEach(p => newSession.totalPoints[p.id] = 0);
     setSession(newSession);
   };
 
-  const addGame = (rawScores: Record<string, number>, adjustments: Record<string, number> = {}) => {
+  const addGame = (ranks: Record<string, number>, adjustments: Record<string, number> = {}) => {
     if (!session) return;
 
-    // Calculate points for this game (logic will be handled in component or helper, 
-    // but here we assume we receive raw scores and need to calculate final points)
-    // Wait, we should probably calculate it here to ensure consistency.
-    // Let's import the calculator.
-    
-    // Dynamic import to avoid circular dependency if any (though not likely here)
     import("@/lib/calculator").then(({ calculateGamePoints, calculateTotalPoints }) => {
-      const { finalPoints, ranks } = calculateGamePoints(rawScores, session.settings, session.players);
+      const { finalPoints } = calculateGamePoints(ranks, adjustments, session.settings, session.players);
       
       const newGame: GameResult = {
         id: nanoid(),
         timestamp: Date.now(),
-        rawScores,
-        finalPoints,
+        ranks,
         adjustments,
-        ranks
+        finalPoints
       };
 
       const updatedGames = [...session.games, newGame];
@@ -75,20 +67,19 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const updateGame = (gameId: string, rawScores: Record<string, number>, adjustments: Record<string, number> = {}) => {
+  const updateGame = (gameId: string, ranks: Record<string, number>, adjustments: Record<string, number> = {}) => {
     if (!session) return;
 
     import("@/lib/calculator").then(({ calculateGamePoints, calculateTotalPoints }) => {
-      const { finalPoints, ranks } = calculateGamePoints(rawScores, session.settings, session.players);
+      const { finalPoints } = calculateGamePoints(ranks, adjustments, session.settings, session.players);
       
       const updatedGames = session.games.map(g => {
         if (g.id === gameId) {
           return {
             ...g,
-            rawScores,
-            finalPoints,
+            ranks,
             adjustments,
-            ranks
+            finalPoints
           };
         }
         return g;
@@ -119,12 +110,36 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const updateSettings = (newSettings: GameSettings) => {
+    if (!session) return;
+
+    // Recalculate all games with new settings
+    import("@/lib/calculator").then(({ calculateGamePoints, calculateTotalPoints }) => {
+      const updatedGames = session.games.map(game => {
+        const { finalPoints } = calculateGamePoints(game.ranks, game.adjustments, newSettings, session.players);
+        return {
+          ...game,
+          finalPoints
+        };
+      });
+
+      const updatedTotals = calculateTotalPoints(updatedGames, session.players.map(p => p.id));
+
+      setSession({
+        ...session,
+        settings: newSettings,
+        games: updatedGames,
+        totalPoints: updatedTotals
+      });
+    });
+  };
+
   const resetSession = () => {
     setSession(null);
   };
 
   return (
-    <GameContext.Provider value={{ session, startNewSession, addGame, updateGame, deleteGame, resetSession }}>
+    <GameContext.Provider value={{ session, startNewSession, addGame, updateGame, deleteGame, updateSettings, resetSession }}>
       {children}
     </GameContext.Provider>
   );

@@ -45,17 +45,30 @@ export function ScoreTable() {
                   </TableCell>
                   {session.players.map(p => {
                     const score = game.finalPoints[p.id];
+                    const rank = game.ranks[p.id];
                     const isPositive = score > 0;
                     const isNegative = score < 0;
+                    
+                    // Rank indicator color
+                    const rankColor = 
+                      rank === 1 ? "text-yellow-500" :
+                      rank === 2 ? "text-gray-400" :
+                      rank === 3 ? "text-amber-700" : "text-muted-foreground";
+
                     return (
                       <TableCell key={p.id} className="text-center">
-                        <span className={`font-mono font-medium ${
-                          isPositive ? "text-emerald-500 dark:text-emerald-400" : 
-                          isNegative ? "text-rose-500 dark:text-rose-400" : 
-                          "text-muted-foreground"
-                        }`}>
-                          {score > 0 ? "+" : ""}{score}
-                        </span>
+                        <div className="flex flex-col items-center">
+                          <span className={`font-mono font-bold text-lg ${
+                            isPositive ? "text-emerald-500 dark:text-emerald-400" : 
+                            isNegative ? "text-rose-500 dark:text-rose-400" : 
+                            "text-muted-foreground"
+                          }`}>
+                            {score > 0 ? "+" : ""}{score}
+                          </span>
+                          <span className={`text-[10px] uppercase tracking-wider font-bold ${rankColor}`}>
+                            {rank === 1 ? "1st" : rank === 2 ? "2nd" : rank === 3 ? "3rd" : "4th"}
+                          </span>
+                        </div>
                       </TableCell>
                     );
                   })}
@@ -89,7 +102,7 @@ export function ScoreTable() {
               {session.players.map(p => {
                 const total = session.totalPoints[p.id];
                 return (
-                  <TableCell key={p.id} className="text-center text-lg">
+                  <TableCell key={p.id} className="text-center text-xl">
                     <span className={total > 0 ? "text-primary" : total < 0 ? "text-destructive" : ""}>
                       {total > 0 ? "+" : ""}{total}
                     </span>
@@ -107,7 +120,8 @@ export function ScoreTable() {
           isOpen={true}
           onClose={() => setEditingGameId(null)}
           gameId={editingGameId}
-          initialScores={session.games.find(g => g.id === editingGameId)?.rawScores}
+          initialRanks={session.games.find(g => g.id === editingGameId)?.ranks}
+          initialAdjustments={session.games.find(g => g.id === editingGameId)?.adjustments}
         />
       )}
     </>

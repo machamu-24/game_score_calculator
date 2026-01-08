@@ -5,7 +5,8 @@ import { GameSetup } from "@/components/GameSetup";
 import { ScoreTable } from "@/components/ScoreTable";
 import { ScoreChart } from "@/components/ScoreChart";
 import { ScoreInput } from "@/components/ScoreInput";
-import { Plus, RefreshCw, Settings } from "lucide-react";
+import { SettingsDialog } from "@/components/SettingsDialog";
+import { Plus, RefreshCw } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,7 +40,9 @@ function GameDashboard() {
           </p>
         </div>
         
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          <SettingsDialog />
+          
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" className="border-destructive/50 text-destructive hover:bg-destructive/10">
