@@ -1,4 +1,4 @@
-import { GameSettings, Player } from "./types";
+import { GameSettings, Player, ChipLog } from "./types";
 
 /**
  * Calculate final points for a single game based on ranks and adjustments.
@@ -15,8 +15,6 @@ export function calculateGamePoints(
     const rank = ranks[player.id]; // 1, 2, 3, 4
     const adjustment = adjustments[player.id] || 0;
     
-    // Get base point from rank (0-indexed array, so rank-1)
-    // If rank is invalid (e.g. 0 or undefined), default to 0 points (or handle error)
     const rankPoint = rank >= 1 && rank <= 4 ? settings.rankPoints[rank - 1] : 0;
     
     finalPoints[player.id] = rankPoint + adjustment;
@@ -40,6 +38,40 @@ export function calculateTotalPoints(
       const gamePoint = game.finalPoints[pid] || 0;
       totals[pid] += gamePoint;
     });
+  });
+
+  return totals;
+}
+
+export function calculateTotalChips(
+  chipLogs: ChipLog[],
+  playerIds: string[]
+): Record<string, number> {
+  const totals: Record<string, number> = {};
+  
+  playerIds.forEach(pid => {
+    totals[pid] = 0;
+  });
+
+  chipLogs.forEach(log => {
+    playerIds.forEach(pid => {
+      const amount = log.amounts[pid] || 0;
+      totals[pid] += amount;
+    });
+  });
+
+  return totals;
+}
+
+export function calculateGrandTotal(
+  gamePoints: Record<string, number>,
+  chipPoints: Record<string, number>,
+  playerIds: string[]
+): Record<string, number> {
+  const totals: Record<string, number> = {};
+  
+  playerIds.forEach(pid => {
+    totals[pid] = (gamePoints[pid] || 0) + (chipPoints[pid] || 0);
   });
 
   return totals;

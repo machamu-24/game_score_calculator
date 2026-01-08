@@ -5,8 +5,10 @@ import { GameSetup } from "@/components/GameSetup";
 import { ScoreTable } from "@/components/ScoreTable";
 import { ScoreChart } from "@/components/ScoreChart";
 import { ScoreInput } from "@/components/ScoreInput";
+import { ChipInput } from "@/components/ChipInput";
+import { ResultScreen } from "@/components/ResultScreen";
 import { SettingsDialog } from "@/components/SettingsDialog";
-import { Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, Coins, Trophy } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +24,8 @@ import {
 function GameDashboard() {
   const { session, resetSession } = useGame();
   const [isInputOpen, setIsInputOpen] = useState(false);
+  const [isChipInputOpen, setIsChipInputOpen] = useState(false);
+  const [isResultOpen, setIsResultOpen] = useState(false);
 
   if (!session) {
     return <GameSetup />;
@@ -40,9 +44,18 @@ function GameDashboard() {
           </p>
         </div>
         
-        <div className="flex gap-3 items-center">
+        <div className="flex flex-wrap gap-3 items-center justify-center">
           <SettingsDialog />
           
+          <Button 
+            variant="outline" 
+            className="border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10"
+            onClick={() => setIsResultOpen(true)}
+          >
+            <Trophy className="w-4 h-4 mr-2" />
+            Result
+          </Button>
+
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" className="border-destructive/50 text-destructive hover:bg-destructive/10">
@@ -65,13 +78,26 @@ function GameDashboard() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-
-          <Button onClick={() => setIsInputOpen(true)} className="bg-primary text-primary-foreground shadow-lg hover:shadow-primary/25 hover:scale-105 transition-all">
-            <Plus className="w-5 h-5 mr-2" />
-            Add Game
-          </Button>
         </div>
       </header>
+
+      {/* Action Bar (Mobile optimized) */}
+      <div className="grid grid-cols-2 gap-4 md:flex md:justify-end">
+        <Button 
+          onClick={() => setIsChipInputOpen(true)} 
+          className="bg-secondary text-secondary-foreground shadow-lg hover:shadow-secondary/25 hover:scale-105 transition-all"
+        >
+          <Coins className="w-5 h-5 mr-2" />
+          Add Chips
+        </Button>
+        <Button 
+          onClick={() => setIsInputOpen(true)} 
+          className="bg-primary text-primary-foreground shadow-lg hover:shadow-primary/25 hover:scale-105 transition-all"
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          Add Game
+        </Button>
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -89,6 +115,16 @@ function GameDashboard() {
       <ScoreInput 
         isOpen={isInputOpen} 
         onClose={() => setIsInputOpen(false)} 
+      />
+      
+      <ChipInput
+        isOpen={isChipInputOpen}
+        onClose={() => setIsChipInputOpen(false)}
+      />
+
+      <ResultScreen
+        isOpen={isResultOpen}
+        onClose={() => setIsResultOpen(false)}
       />
     </div>
   );

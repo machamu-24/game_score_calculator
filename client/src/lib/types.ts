@@ -6,7 +6,6 @@ export interface Player {
 
 export interface GameSettings {
   // Points awarded for each rank (1st, 2nd, 3rd, 4th)
-  // e.g., [50, 10, -10, -30]
   rankPoints: [number, number, number, number];
 }
 
@@ -21,17 +20,29 @@ export interface GameResult {
   finalPoints: Record<string, number>;
 }
 
+export interface ChipLog {
+  id: string;
+  timestamp: number;
+  // Chip changes for each player
+  amounts: Record<string, number>;
+  note?: string;
+}
+
 export interface Session {
   id: string;
   startedAt: number;
   players: Player[];
   settings: GameSettings;
   games: GameResult[];
-  // Current total points for each player
-  totalPoints: Record<string, number>;
+  chipLogs: ChipLog[];
+  // Current total points from games (excluding chips)
+  totalGamePoints: Record<string, number>;
+  // Current total chips
+  totalChips: Record<string, number>;
+  // Grand total (Game Points + Chips)
+  grandTotal: Record<string, number>;
 }
 
 export const DEFAULT_SETTINGS: GameSettings = {
-  // Default rank points: 1st=+50, 2nd=+10, 3rd=-10, 4th=-30
   rankPoints: [50, 10, -10, -30],
 };

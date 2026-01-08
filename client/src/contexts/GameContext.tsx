@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { GameResult, GameSettings, Player, Session, DEFAULT_SETTINGS } from "@/lib/types";
-import { calculateTotalPoints } from "@/lib/calculator";
+import { GameResult, GameSettings, Player, Session, DEFAULT_SETTINGS, ChipLog } from "@/lib/types";
+import { calculateTotalPoints, calculateTotalChips, calculateGrandTotal } from "@/lib/calculator";
 import { nanoid } from "nanoid";
 
 interface GameContextType {
@@ -9,6 +9,8 @@ interface GameContextType {
   addGame: (ranks: Record<string, number>, adjustments?: Record<string, number>) => void;
   updateGame: (gameId: string, ranks: Record<string, number>, adjustments?: Record<string, number>) => void;
   deleteGame: (gameId: string) => void;
+  addChipLog: (amounts: Record<string, number>, note?: string) => void;
+  deleteChipLog: (logId: string) => void;
   updateSettings: (newSettings: GameSettings) => void;
   resetSession: () => void;
 }
@@ -17,15 +19,15 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(() => {
-    const saved = localStorage.getItem("mahjong_session_v2");
+    const saved = localStorage.getItem("mahjong_session_v3");
     return saved ? JSON.parse(saved) : null;
   });
 
   useEffect(() => {
     if (session) {
-      localStorage.setItem("mahjong_session_v2", JSON.stringify(session));
+      localStorage.setItem("mahjong_session_v3", JSON.stringify(session));
     } else {
-      localStorage.removeItem("mahjong_session_v2");
+      localStorage.removeItem("mahjong_session_v3");
     }
   }, [session]);
 
@@ -36,16 +38,37 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       players,
       settings,
       games: [],
-      totalPoints: {},
+      chipLogs: [],
+      totalGamePoints: {},
+      totalChips: {},
+      grandTotal: {},
     };
-    players.forEach(p => newSession.totalPoints[p.id] = 0);
+    players.forEach(p => {
+      newSession.totalGamePoints[p.id] = 0;
+      newSession.totalChips[p.id] = 0;
+      newSession.grandTotal[p.id] = 0;
+    });
     setSession(newSession);
+  };
+
+  const updateSessionTotals = (currentSession: Session) => {
+    const playerIds = currentSession.players.map(p => p.id);
+    const totalGamePoints = calculateTotalPoints(currentSession.games, playerIds);
+    const totalChips = calculateTotalChips(currentSession.chipLogs, playerIds);
+    const grandTotal = calculateGrandTotal(totalGamePoints, totalChips, playerIds);
+
+    return {
+      ...currentSession,
+      totalGamePoints,
+      totalChips,
+      grandTotal
+    };
   };
 
   const addGame = (ranks: Record<string, number>, adjustments: Record<string, number> = {}) => {
     if (!session) return;
 
-    import("@/lib/calculator").then(({ calculateGamePoints, calculateTotalPoints }) => {
+    import("@/lib/calculator").then(({ calculateGamePoints }) => {
       const { finalPoints } = calculateGamePoints(ranks, adjustments, session.settings, session.players);
       
       const newGame: GameResult = {
@@ -56,21 +79,19 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         finalPoints
       };
 
-      const updatedGames = [...session.games, newGame];
-      const updatedTotals = calculateTotalPoints(updatedGames, session.players.map(p => p.id));
-
-      setSession({
+      const updatedSession = {
         ...session,
-        games: updatedGames,
-        totalPoints: updatedTotals
-      });
+        games: [...session.games, newGame]
+      };
+
+      setSession(updateSessionTotals(updatedSession));
     });
   };
 
   const updateGame = (gameId: string, ranks: Record<string, number>, adjustments: Record<string, number> = {}) => {
     if (!session) return;
 
-    import("@/lib/calculator").then(({ calculateGamePoints, calculateTotalPoints }) => {
+    import("@/lib/calculator").then(({ calculateGamePoints }) => {
       const { finalPoints } = calculateGamePoints(ranks, adjustments, session.settings, session.players);
       
       const updatedGames = session.games.map(g => {
@@ -85,36 +106,61 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         return g;
       });
 
-      const updatedTotals = calculateTotalPoints(updatedGames, session.players.map(p => p.id));
-
-      setSession({
+      const updatedSession = {
         ...session,
-        games: updatedGames,
-        totalPoints: updatedTotals
-      });
+        games: updatedGames
+      };
+
+      setSession(updateSessionTotals(updatedSession));
     });
   };
 
   const deleteGame = (gameId: string) => {
     if (!session) return;
     
-    import("@/lib/calculator").then(({ calculateTotalPoints }) => {
-      const updatedGames = session.games.filter(g => g.id !== gameId);
-      const updatedTotals = calculateTotalPoints(updatedGames, session.players.map(p => p.id));
+    const updatedGames = session.games.filter(g => g.id !== gameId);
+    const updatedSession = {
+      ...session,
+      games: updatedGames
+    };
 
-      setSession({
-        ...session,
-        games: updatedGames,
-        totalPoints: updatedTotals
-      });
-    });
+    setSession(updateSessionTotals(updatedSession));
+  };
+
+  const addChipLog = (amounts: Record<string, number>, note?: string) => {
+    if (!session) return;
+
+    const newLog: ChipLog = {
+      id: nanoid(),
+      timestamp: Date.now(),
+      amounts,
+      note
+    };
+
+    const updatedSession = {
+      ...session,
+      chipLogs: [...session.chipLogs, newLog]
+    };
+
+    setSession(updateSessionTotals(updatedSession));
+  };
+
+  const deleteChipLog = (logId: string) => {
+    if (!session) return;
+
+    const updatedLogs = session.chipLogs.filter(l => l.id !== logId);
+    const updatedSession = {
+      ...session,
+      chipLogs: updatedLogs
+    };
+
+    setSession(updateSessionTotals(updatedSession));
   };
 
   const updateSettings = (newSettings: GameSettings) => {
     if (!session) return;
 
-    // Recalculate all games with new settings
-    import("@/lib/calculator").then(({ calculateGamePoints, calculateTotalPoints }) => {
+    import("@/lib/calculator").then(({ calculateGamePoints }) => {
       const updatedGames = session.games.map(game => {
         const { finalPoints } = calculateGamePoints(game.ranks, game.adjustments, newSettings, session.players);
         return {
@@ -123,14 +169,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         };
       });
 
-      const updatedTotals = calculateTotalPoints(updatedGames, session.players.map(p => p.id));
-
-      setSession({
+      const updatedSession = {
         ...session,
         settings: newSettings,
-        games: updatedGames,
-        totalPoints: updatedTotals
-      });
+        games: updatedGames
+      };
+
+      setSession(updateSessionTotals(updatedSession));
     });
   };
 
@@ -139,7 +184,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <GameContext.Provider value={{ session, startNewSession, addGame, updateGame, deleteGame, updateSettings, resetSession }}>
+    <GameContext.Provider value={{ 
+      session, 
+      startNewSession, 
+      addGame, 
+      updateGame, 
+      deleteGame, 
+      addChipLog,
+      deleteChipLog,
+      updateSettings, 
+      resetSession 
+    }}>
       {children}
     </GameContext.Provider>
   );
