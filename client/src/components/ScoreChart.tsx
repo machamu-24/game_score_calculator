@@ -5,31 +5,49 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export function ScoreChart() {
   const { session } = useGame();
 
-  if (!session || session.games.length === 0) return null;
+  if (!session || (session.games.length === 0 && session.chipLogs.length === 0)) return null;
 
-  // Transform data for Recharts
-  // Data structure: [{ name: "Start", p1: 0, p2: 0... }, { name: "Game 1", p1: 10, p2: -5... }]
-  
+  // Combine games and chip logs into a single timeline
+  const events = [
+    ...session.games.map((g, i) => ({
+      type: 'game',
+      id: g.id,
+      timestamp: g.timestamp,
+      label: `ゲーム ${i + 1}`,
+      changes: g.finalPoints
+    })),
+    ...session.chipLogs.map(c => ({
+      type: 'chip',
+      id: c.id,
+      timestamp: c.timestamp,
+      label: 'チップ',
+      changes: c.amounts
+    }))
+  ].sort((a, b) => a.timestamp - b.timestamp);
+
+  // Initial state (Start)
   const data = [
     {
-      name: "Start",
+      name: "開始",
       ...session.players.reduce((acc, p) => ({ ...acc, [p.id]: 0 }), {})
     }
   ];
 
+  // Calculate cumulative totals
   let currentTotals = { ...session.players.reduce((acc, p) => ({ ...acc, [p.id]: 0 }), {}) };
 
-  session.games.forEach((game, index) => {
-    const point = {
-      name: `Game ${index + 1}`,
-    };
-    
+  events.forEach((event) => {
     session.players.forEach(p => {
       // @ts-ignore
-      currentTotals[p.id] += game.finalPoints[p.id];
-      // @ts-ignore
-      point[p.id] = parseFloat(currentTotals[p.id].toFixed(1));
+      currentTotals[p.id] += event.changes[p.id] || 0;
     });
+
+    const point = {
+      name: event.label,
+      ...Object.fromEntries(
+        Object.entries(currentTotals).map(([k, v]) => [k, parseFloat((v as number).toFixed(1))])
+      )
+    };
     
     // @ts-ignore
     data.push(point);
@@ -38,7 +56,7 @@ export function ScoreChart() {
   return (
     <Card className="glass-panel border-0 w-full">
       <CardHeader>
-        <CardTitle className="text-lg font-medium text-muted-foreground">Score Progression</CardTitle>
+        <CardTitle className="text-lg font-medium text-muted-foreground">スコア推移（チップ込み）</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[300px] w-full">
