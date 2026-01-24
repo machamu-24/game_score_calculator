@@ -46,3 +46,28 @@ export interface Session {
 export const DEFAULT_SETTINGS: GameSettings = {
   rankPoints: [50, 10, -10, -30],
 };
+
+// 新規追加: 履歴保存用の型定義
+export interface SessionHistoryItem {
+  id: string;
+  date: number;
+  players: {
+    name: string;
+    totalScore: number;
+    rank: number; // セッション内での順位
+  }[];
+  gameCount: number; // このセッションで行われたゲーム数
+}
+
+// 新規追加: プレイヤー通算成績用の型定義
+export interface PlayerStats {
+  name: string;
+  totalSessions: number; // 参加セッション数
+  totalGames: number;    // 総ゲーム数（セッション内のゲーム数の合計）
+  totalScore: number;    // 通算スコア
+  averageScore: number;  // 平均スコア
+  topCount: number;      // セッショントップ回数
+  topRate: number;       // セッショントップ率
+  averageRank: number;   // 平均順位（セッション単位）
+  lastPlayed: number;    // 最終プレイ日
+}

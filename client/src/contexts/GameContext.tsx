@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { GameResult, GameSettings, Player, Session, DEFAULT_SETTINGS, ChipLog } from "@/lib/types";
 import { calculateTotalPoints, calculateTotalChips, calculateGrandTotal } from "@/lib/calculator";
 import { nanoid } from "nanoid";
+import { useHistory } from "./HistoryContext";
 
 interface GameContextType {
   session: Session | null;
@@ -22,6 +23,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem("mahjong_session_v3");
     return saved ? JSON.parse(saved) : null;
   });
+  
+  const { saveSession } = useHistory();
 
   useEffect(() => {
     if (session) {
@@ -180,6 +183,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetSession = () => {
+    if (session) {
+      saveSession(session); // Save to history before resetting
+    }
     setSession(null);
   };
 

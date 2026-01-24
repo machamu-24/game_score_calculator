@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { GameProvider, useGame } from "@/contexts/GameContext";
+import { HistoryProvider } from "@/contexts/HistoryContext";
 import { GameSetup } from "@/components/GameSetup";
 import { ScoreTable } from "@/components/ScoreTable";
 import { ScoreChart } from "@/components/ScoreChart";
@@ -8,7 +9,8 @@ import { ScoreInput } from "@/components/ScoreInput";
 import { ChipInput } from "@/components/ChipInput";
 import { ResultScreen } from "@/components/ResultScreen";
 import { SettingsDialog } from "@/components/SettingsDialog";
-import { Plus, RefreshCw, Coins, Trophy } from "lucide-react";
+import { StatsPage } from "@/components/StatsPage";
+import { Plus, RefreshCw, Coins, Trophy, History } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,9 +28,25 @@ function GameDashboard() {
   const [isInputOpen, setIsInputOpen] = useState(false);
   const [isChipInputOpen, setIsChipInputOpen] = useState(false);
   const [isResultOpen, setIsResultOpen] = useState(false);
+  const [isStatsOpen, setIsStatsOpen] = useState(false);
 
   if (!session) {
-    return <GameSetup />;
+    return (
+      <>
+        <GameSetup />
+        <div className="fixed bottom-4 right-4">
+          <Button 
+            variant="outline" 
+            className="shadow-lg bg-background/80 backdrop-blur"
+            onClick={() => setIsStatsOpen(true)}
+          >
+            <History className="w-4 h-4 mr-2" />
+            戦績・履歴を見る
+          </Button>
+        </div>
+        {isStatsOpen && <StatsPage onClose={() => setIsStatsOpen(false)} />}
+      </>
+    );
   }
 
   return (
@@ -126,16 +144,20 @@ function GameDashboard() {
         isOpen={isResultOpen}
         onClose={() => setIsResultOpen(false)}
       />
+      
+      {isStatsOpen && <StatsPage onClose={() => setIsStatsOpen(false)} />}
     </div>
   );
 }
 
 export default function Home() {
   return (
-    <GameProvider>
-      <div className="min-h-screen w-full bg-background/50 backdrop-blur-3xl">
-        <GameDashboard />
-      </div>
-    </GameProvider>
+    <HistoryProvider>
+      <GameProvider>
+        <div className="min-h-screen w-full bg-background/50 backdrop-blur-3xl">
+          <GameDashboard />
+        </div>
+      </GameProvider>
+    </HistoryProvider>
   );
 }
