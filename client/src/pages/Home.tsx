@@ -78,20 +78,20 @@ function GameDashboard() {
             <AlertDialogTrigger asChild>
               <Button variant="outline" className="border-destructive/50 text-destructive hover:bg-destructive/10">
                 <RefreshCw className="w-4 h-4 mr-2" />
-                リセット
+                終了
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent className="glass-panel">
               <AlertDialogHeader>
                 <AlertDialogTitle>セッションを終了しますか？</AlertDialogTitle>
                 <AlertDialogDescription>
-                  現在のゲームデータはすべて消去されます。この操作は取り消せません。
+                  現在のゲーム結果を履歴に保存して、セッションを終了します。
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>キャンセル</AlertDialogCancel>
                 <AlertDialogAction onClick={resetSession} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                  終了する
+                  終了して保存
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

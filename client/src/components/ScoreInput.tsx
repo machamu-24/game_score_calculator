@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,41 +13,32 @@ interface ScoreInputProps {
   initialAdjustments?: Record<string, number>;
 }
 
-export function ScoreInput({ isOpen, onClose, gameId, initialRanks, initialAdjustments }: ScoreInputProps) {
+export function ScoreInput({ isOpen, onClose, gameId, initialRanks }: ScoreInputProps) {
   const { session, addGame, updateGame } = useGame();
   const [ranks, setRanks] = useState<Record<string, string>>({});
-  const [adjustments, setAdjustments] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && session) {
       const initRanks: Record<string, string> = {};
-      const initAdj: Record<string, string> = {};
       
       session.players.forEach(p => {
         initRanks[p.id] = initialRanks ? String(initialRanks[p.id] || "") : "";
-        initAdj[p.id] = initialAdjustments ? String(initialAdjustments[p.id] || "") : "";
       });
       
       setRanks(initRanks);
-      setAdjustments(initAdj);
       setError(null);
     }
-  }, [isOpen, session, initialRanks, initialAdjustments]);
+  }, [isOpen, session, initialRanks]);
 
   const handleRankChange = (pid: string, value: string) => {
     setRanks(prev => ({ ...prev, [pid]: value }));
-  };
-
-  const handleAdjustmentChange = (pid: string, value: string) => {
-    setAdjustments(prev => ({ ...prev, [pid]: value }));
   };
 
   const validateAndSubmit = () => {
     if (!session) return;
 
     const parsedRanks: Record<string, number> = {};
-    const parsedAdjustments: Record<string, number> = {};
     const rankCounts = new Set<number>();
     let hasError = false;
 
@@ -61,18 +51,10 @@ export function ScoreInput({ isOpen, onClose, gameId, initialRanks, initialAdjus
         parsedRanks[p.id] = r;
         rankCounts.add(r);
       }
-
-      // Parse Adjustment (optional, default 0)
-      const adjStr = adjustments[p.id];
-      const adj = adjStr === "" ? 0 : parseInt(adjStr);
-      if (isNaN(adj)) {
-        if (adjStr !== "" && adjStr !== "-") hasError = true;
-      }
-      parsedAdjustments[p.id] = isNaN(adj) ? 0 : adj;
     });
 
     if (hasError) {
-      setError("すべての順位を選択し、調整点には有効な数値を入力してください。");
+      setError("すべてのプレイヤーの順位を選択してください。");
       return;
     }
 
@@ -83,9 +65,9 @@ export function ScoreInput({ isOpen, onClose, gameId, initialRanks, initialAdjus
     }
 
     if (gameId) {
-      updateGame(gameId, parsedRanks, parsedAdjustments);
+      updateGame(gameId, parsedRanks, {});
     } else {
-      addGame(parsedRanks, parsedAdjustments);
+      addGame(parsedRanks, {});
     }
     onClose();
   };
@@ -94,7 +76,7 @@ export function ScoreInput({ isOpen, onClose, gameId, initialRanks, initialAdjus
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="glass-panel border-0 sm:max-w-lg">
+      <DialogContent className="glass-panel border-0 sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-center">
             {gameId ? "ゲーム結果の編集" : "ゲーム結果の入力"}
@@ -103,18 +85,17 @@ export function ScoreInput({ isOpen, onClose, gameId, initialRanks, initialAdjus
         
         <div className="grid gap-6 py-4">
           <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground text-center mb-2">
-            <div className="col-span-4 text-left pl-2">プレイヤー</div>
-            <div className="col-span-4">順位</div>
-            <div className="col-span-4">調整点</div>
+            <div className="col-span-6 text-left pl-2">プレイヤー</div>
+            <div className="col-span-6">順位</div>
           </div>
 
           {session.players.map((player) => (
             <div key={player.id} className="grid grid-cols-12 items-center gap-4">
-              <Label htmlFor={`rank-${player.id}`} className="col-span-4 font-medium truncate pl-2 text-base">
+              <Label htmlFor={`rank-${player.id}`} className="col-span-6 font-medium truncate pl-2 text-base">
                 {player.name}
               </Label>
               
-              <div className="col-span-4">
+              <div className="col-span-6">
                 <Select 
                   value={ranks[player.id]} 
                   onValueChange={(val) => handleRankChange(player.id, val)}
@@ -129,16 +110,6 @@ export function ScoreInput({ isOpen, onClose, gameId, initialRanks, initialAdjus
                     <SelectItem value="4">4位</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div className="col-span-4">
-                <Input
-                  type="number"
-                  value={adjustments[player.id]}
-                  onChange={(e) => handleAdjustmentChange(player.id, e.target.value)}
-                  className="glass-input border-0 text-center font-mono"
-                  placeholder="+/-"
-                />
               </div>
             </div>
           ))}

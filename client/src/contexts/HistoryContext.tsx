@@ -5,6 +5,7 @@ interface HistoryContextType {
   history: SessionHistoryItem[];
   playerStats: PlayerStats[];
   saveSession: (session: Session) => void;
+  deleteHistoryItem: (id: string) => void;
   clearHistory: () => void;
 }
 
@@ -98,6 +99,13 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
     calculateStats(newHistory);
   };
 
+  const deleteHistoryItem = (id: string) => {
+    const newHistory = history.filter(item => item.id !== id);
+    setHistory(newHistory);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newHistory));
+    calculateStats(newHistory);
+  };
+
   const clearHistory = () => {
     setHistory([]);
     setPlayerStats([]);
@@ -105,7 +113,7 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <HistoryContext.Provider value={{ history, playerStats, saveSession, clearHistory }}>
+    <HistoryContext.Provider value={{ history, playerStats, saveSession, deleteHistoryItem, clearHistory }}>
       {children}
     </HistoryContext.Provider>
   );
