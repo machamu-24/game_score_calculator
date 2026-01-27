@@ -1,7 +1,7 @@
 import { useHistory } from "@/contexts/HistoryContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Trophy, Calendar, TrendingUp, X, Medal, Target, Hash } from "lucide-react";
+import { Trophy, Calendar, TrendingUp, X, Medal, Target, Hash, Crown, Shield, Zap, Scale, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
@@ -45,7 +45,80 @@ export function PlayerProfile({ playerName, onClose }: PlayerProfileProps) {
     });
   }
 
+  // Calculate detailed stats for achievements
+  const totalGames = playerHistory.reduce((acc, session) => acc + session.gameCount, 0);
+  const rankCounts = [0, 0, 0, 0, 0]; // index 1-4 used for ranks
+  
+  playerHistory.forEach(session => {
+    const p = session.players.find(p => p.name === playerName);
+    if (p && p.rank) {
+      rankCounts[p.rank]++;
+    }
+  });
+
   if (!stats) return null;
+
+  // Achievement Definitions
+  const achievements = [
+    {
+      id: 'top_last_demon',
+      title: 'トップラス魔神',
+      description: '1位と4位の合計が70%以上',
+      icon: <Zap className="w-4 h-4" />,
+      color: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
+      condition: () => {
+        if (totalGames < 5) return false;
+        const topLastRate = (rankCounts[1] + rankCounts[4]) / stats.totalSessions;
+        return topLastRate >= 0.7;
+      }
+    },
+    {
+      id: 'rentai_demon',
+      title: '連対の鬼',
+      description: '1位・2位の確率が60%以上',
+      icon: <Crown className="w-4 h-4" />,
+      color: 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
+      condition: () => {
+        if (totalGames < 5) return false;
+        const rentaiRate = (rankCounts[1] + rankCounts[2]) / stats.totalSessions;
+        return rentaiRate >= 0.6;
+      }
+    },
+    {
+      id: 'iron_defense',
+      title: '鉄壁の守備',
+      description: '4位率が15%以下',
+      icon: <Shield className="w-4 h-4" />,
+      color: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
+      condition: () => {
+        if (totalGames < 5) return false;
+        const lastRate = rankCounts[4] / stats.totalSessions;
+        return lastRate <= 0.15;
+      }
+    },
+    {
+      id: 'high_roller',
+      title: '豪運の覇者',
+      description: '通算スコアが+200以上',
+      icon: <Star className="w-4 h-4" />,
+      color: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800',
+      condition: () => stats.totalScore >= 200
+    },
+    {
+      id: 'mr_average',
+      title: 'ミスター平均',
+      description: '平均順位が2.40〜2.60',
+      icon: <Scale className="w-4 h-4" />,
+      color: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800',
+      condition: () => {
+        if (totalGames < 5) return false;
+        const avg = typeof stats.averageRank === 'string' ? parseFloat(stats.averageRank) : stats.averageRank;
+        return avg >= 2.4 && avg <= 2.6;
+      }
+    }
+  ];
+
+  const unlockedAchievements = achievements.filter(a => a.condition());
 
   return (
     <div className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -67,6 +140,28 @@ export function PlayerProfile({ playerName, onClose }: PlayerProfileProps) {
         
         <CardContent className="flex-1 overflow-hidden p-6 space-y-6">
           <ScrollArea className="h-full pr-4">
+            {/* Achievements Section */}
+            {unlockedAchievements.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-primary" />
+                  獲得称号
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  {unlockedAchievements.map(achievement => (
+                    <div 
+                      key={achievement.id}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-full border ${achievement.color} shadow-sm transition-all hover:scale-105`}
+                      title={achievement.description}
+                    >
+                      {achievement.icon}
+                      <span className="font-bold text-sm">{achievement.title}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Key Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
