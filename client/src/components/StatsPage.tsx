@@ -2,7 +2,7 @@ import { useHistory } from "@/contexts/HistoryContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Trophy, Calendar, TrendingUp, Trash2, X } from "lucide-react";
+import { Trophy, Calendar, TrendingUp, Trash2, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -16,9 +16,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useState } from "react";
+import { PlayerProfile } from "./PlayerProfile";
 
 export function StatsPage({ onClose }: { onClose: () => void }) {
   const { playerStats, history, deleteHistoryItem, clearHistory } = useHistory();
+  const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
 
   // Prepare data for the chart
   // Sort history by date ascending for the chart
@@ -66,6 +69,13 @@ export function StatsPage({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+      {selectedPlayer && (
+        <PlayerProfile 
+          playerName={selectedPlayer} 
+          onClose={() => setSelectedPlayer(null)} 
+        />
+      )}
+      
       <Card className="w-full max-w-4xl h-[90vh] flex flex-col glass-panel border-primary/20 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 pb-4">
           <div className="flex items-center gap-2">
@@ -94,7 +104,12 @@ export function StatsPage({ onClose }: { onClose: () => void }) {
                 ) : (
                   <div className="grid gap-4">
                     {playerStats.map((stat, index) => (
-                      <Card key={stat.name} className="overflow-hidden border-l-4" style={{ borderLeftColor: index === 0 ? '#fbbf24' : index === 1 ? '#94a3b8' : index === 2 ? '#b45309' : 'transparent' }}>
+                      <Card 
+                        key={stat.name} 
+                        className="overflow-hidden border-l-4 cursor-pointer hover:bg-muted/50 transition-colors group" 
+                        style={{ borderLeftColor: index === 0 ? '#fbbf24' : index === 1 ? '#94a3b8' : index === 2 ? '#b45309' : 'transparent' }}
+                        onClick={() => setSelectedPlayer(stat.name)}
+                      >
                         <CardContent className="p-4 flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
@@ -106,7 +121,10 @@ export function StatsPage({ onClose }: { onClose: () => void }) {
                               {index + 1}
                             </div>
                             <div>
-                              <h3 className="font-bold text-lg">{stat.name}</h3>
+                              <h3 className="font-bold text-lg flex items-center gap-2">
+                                {stat.name}
+                                <User className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </h3>
                               <p className="text-xs text-muted-foreground">最終プレイ: {new Date(stat.lastPlayed).toLocaleDateString()}</p>
                             </div>
                           </div>
