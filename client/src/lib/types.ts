@@ -71,3 +71,11 @@ export interface PlayerStats {
   averageRank: number;   // 平均順位（セッション単位）
   lastPlayed: number;    // 最終プレイ日
 }
+
+// 新規追加: 登録済みプレイヤー管理用の型定義
+export interface RegisteredPlayer {
+  id: string;
+  name: string;
+  color?: string; // 好きな色を設定できるようにする
+  createdAt: number;
+}

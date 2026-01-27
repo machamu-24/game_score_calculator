@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { GameProvider, useGame } from "@/contexts/GameContext";
 import { HistoryProvider } from "@/contexts/HistoryContext";
+import { PlayerProvider } from "@/contexts/PlayerContext";
 import { GameSetup } from "@/components/GameSetup";
 import { ScoreTable } from "@/components/ScoreTable";
 import { ScoreChart } from "@/components/ScoreChart";
@@ -153,11 +154,13 @@ function GameDashboard() {
 export default function Home() {
   return (
     <HistoryProvider>
-      <GameProvider>
-        <div className="min-h-screen w-full bg-background/50 backdrop-blur-3xl">
-          <GameDashboard />
-        </div>
-      </GameProvider>
+      <PlayerProvider>
+        <GameProvider>
+          <div className="min-h-screen w-full bg-background/50 backdrop-blur-3xl">
+            <GameDashboard />
+          </div>
+        </GameProvider>
+      </PlayerProvider>
     </HistoryProvider>
   );
 }
