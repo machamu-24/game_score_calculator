@@ -19,19 +19,20 @@ export function ScoreTable() {
       {/* Games Table */}
       <div className="rounded-xl overflow-hidden glass-panel border-0">
         <div className="p-4 font-bold text-lg border-b border-white/10">ゲーム履歴</div>
-        <Table>
-          <TableHeader className="bg-white/5">
-            <TableRow className="hover:bg-transparent border-white/10">
-              <TableHead className="w-[60px] text-center">#</TableHead>
-              {session.players.map(p => (
-                <TableHead key={p.id} className="text-center font-bold text-foreground">
-                  {p.name}
-                </TableHead>
-              ))}
-              <TableHead className="w-[80px] text-center">操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <div className="overflow-x-auto">
+          <Table className="min-w-[600px]">
+            <TableHeader className="bg-white/5">
+              <TableRow className="hover:bg-transparent border-white/10">
+                <TableHead className="w-[50px] text-center text-xs sm:text-sm">#</TableHead>
+                {session.players.map(p => (
+                  <TableHead key={p.id} className="text-center font-bold text-foreground min-w-[80px]">
+                    {p.name}
+                  </TableHead>
+                ))}
+                <TableHead className="w-[70px] text-center text-xs sm:text-sm">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
             {reversedGames.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={session.players.length + 2} className="text-center py-8 text-muted-foreground">
@@ -116,6 +117,7 @@ export function ScoreTable() {
             </TableRow>
           </TableBody>
         </Table>
+        </div>
       </div>
 
       {/* Chips Table */}
@@ -125,82 +127,86 @@ export function ScoreTable() {
             <Coins className="w-5 h-5 text-yellow-500" />
             チップ / 調整
           </div>
-          <Table>
-            <TableBody>
-              {reversedChips.map((log) => (
-                <TableRow key={log.id} className="hover:bg-white/5 border-white/10">
-                  <TableCell className="w-[60px] text-center text-xs text-muted-foreground">
-                    {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table className="min-w-[600px]">
+              <TableBody>
+                {reversedChips.map((log) => (
+                  <TableRow key={log.id} className="hover:bg-white/5 border-white/10">
+                    <TableCell className="w-[50px] text-center text-xs text-muted-foreground">
+                      {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </TableCell>
+                    {session.players.map(p => {
+                      const amount = log.amounts[p.id];
+                      return (
+                        <TableCell key={p.id} className="text-center min-w-[80px]">
+                          {amount !== 0 && (
+                            <span className={`font-mono font-medium ${
+                              amount > 0 ? "text-yellow-500" : "text-muted-foreground"
+                            }`}>
+                              {amount > 0 ? "+" : ""}{amount}
+                            </span>
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                    <TableCell className="w-[70px] text-center">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 hover:bg-white/10 hover:text-destructive"
+                        onClick={() => deleteChipLog(log.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                
+                {/* Chip Subtotal */}
+                <TableRow className="bg-white/5 font-medium border-t-2 border-white/10">
+                  <TableCell className="text-center text-muted-foreground text-xs">チップ計</TableCell>
                   {session.players.map(p => {
-                    const amount = log.amounts[p.id];
+                    const total = session.totalChips[p.id];
                     return (
                       <TableCell key={p.id} className="text-center">
-                        {amount !== 0 && (
-                          <span className={`font-mono font-medium ${
-                            amount > 0 ? "text-yellow-500" : "text-muted-foreground"
-                          }`}>
-                            {amount > 0 ? "+" : ""}{amount}
-                          </span>
-                        )}
+                        <span className={total > 0 ? "text-yellow-500" : total < 0 ? "text-muted-foreground" : ""}>
+                          {total > 0 ? "+" : ""}{total}
+                        </span>
                       </TableCell>
                     );
                   })}
-                  <TableCell className="w-[80px] text-center">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 hover:bg-white/10 hover:text-destructive"
-                      onClick={() => deleteChipLog(log.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
+                  <TableCell></TableCell>
                 </TableRow>
-              ))}
-              
-              {/* Chip Subtotal */}
-              <TableRow className="bg-white/5 font-medium border-t-2 border-white/10">
-                <TableCell className="text-center text-muted-foreground text-xs">チップ計</TableCell>
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      )}
+
+      {/* Grand Total */}
+      <div className="rounded-xl overflow-hidden glass-panel border-0 bg-primary/5 border-primary/20 sticky bottom-0 z-10 shadow-lg backdrop-blur-md">
+        <div className="overflow-x-auto">
+          <Table className="min-w-[600px]">
+            <TableBody>
+              <TableRow className="hover:bg-transparent border-0">
+                <TableCell className="w-[50px] text-center font-bold text-primary text-xs sm:text-sm">合計</TableCell>
                 {session.players.map(p => {
-                  const total = session.totalChips[p.id];
+                  const total = session.grandTotal[p.id];
                   return (
-                    <TableCell key={p.id} className="text-center">
-                      <span className={total > 0 ? "text-yellow-500" : total < 0 ? "text-muted-foreground" : ""}>
+                    <TableCell key={p.id} className="text-center min-w-[80px]">
+                      <span className={`text-xl sm:text-2xl font-bold font-mono ${
+                        total > 0 ? "text-primary" : total < 0 ? "text-destructive" : ""
+                      }`}>
                         {total > 0 ? "+" : ""}{total}
                       </span>
                     </TableCell>
                   );
                 })}
-                <TableCell></TableCell>
+                <TableCell className="w-[70px]"></TableCell>
               </TableRow>
             </TableBody>
           </Table>
         </div>
-      )}
-
-      {/* Grand Total */}
-      <div className="rounded-xl overflow-hidden glass-panel border-0 bg-primary/5 border-primary/20">
-        <Table>
-          <TableBody>
-            <TableRow className="hover:bg-transparent border-0">
-              <TableCell className="w-[60px] text-center font-bold text-primary">合計</TableCell>
-              {session.players.map(p => {
-                const total = session.grandTotal[p.id];
-                return (
-                  <TableCell key={p.id} className="text-center">
-                    <span className={`text-2xl font-bold font-mono ${
-                      total > 0 ? "text-primary" : total < 0 ? "text-destructive" : ""
-                    }`}>
-                      {total > 0 ? "+" : ""}{total}
-                    </span>
-                  </TableCell>
-                );
-              })}
-              <TableCell className="w-[80px]"></TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
       </div>
 
       {editingGameId && (

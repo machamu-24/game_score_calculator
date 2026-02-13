@@ -68,7 +68,7 @@ export function StatsPage({ onClose }: { onClose: () => void }) {
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-0 sm:p-4">
       {selectedPlayer && (
         <PlayerProfile 
           playerName={selectedPlayer} 
@@ -76,33 +76,35 @@ export function StatsPage({ onClose }: { onClose: () => void }) {
         />
       )}
       
-      <Card className="w-full max-w-4xl h-[90vh] flex flex-col glass-panel border-primary/20 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-        <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 pb-4">
+      <Card className="w-full h-full sm:h-[90vh] max-w-4xl flex flex-col glass-panel border-0 sm:border-primary/20 shadow-2xl animate-in fade-in zoom-in-95 duration-200 rounded-none sm:rounded-xl">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 pb-4 shrink-0">
           <div className="flex items-center gap-2">
             <TrendingUp className="w-6 h-6 text-primary" />
-            <CardTitle className="text-2xl">戦績・履歴</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">戦績・履歴</CardTitle>
           </div>
-          <Button variant="ghost" onClick={onClose}>閉じる</Button>
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-10 w-10">
+            <X className="w-6 h-6" />
+          </Button>
         </CardHeader>
         
-        <CardContent className="flex-1 overflow-hidden p-0">
+        <CardContent className="flex-1 overflow-hidden p-0 flex flex-col">
           <Tabs defaultValue="stats" className="h-full flex flex-col">
-            <div className="px-6 pt-4">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="stats">プレイヤー通算成績</TabsTrigger>
-                <TabsTrigger value="chart">通算推移グラフ</TabsTrigger>
-                <TabsTrigger value="history">対戦履歴</TabsTrigger>
+            <div className="px-4 pt-4 shrink-0">
+              <TabsList className="grid w-full grid-cols-3 h-12">
+                <TabsTrigger value="stats" className="text-xs sm:text-sm">通算成績</TabsTrigger>
+                <TabsTrigger value="chart" className="text-xs sm:text-sm">推移グラフ</TabsTrigger>
+                <TabsTrigger value="history" className="text-xs sm:text-sm">対戦履歴</TabsTrigger>
               </TabsList>
             </div>
 
-            <TabsContent value="stats" className="flex-1 overflow-hidden p-6">
-              <ScrollArea className="h-full pr-4">
+            <TabsContent value="stats" className="flex-1 overflow-hidden p-4 sm:p-6">
+              <ScrollArea className="h-full pr-0 sm:pr-4">
                 {playerStats.length === 0 ? (
                   <div className="text-center text-muted-foreground py-12">
                     データがありません。ゲームをプレイして結果を保存してください。
                   </div>
                 ) : (
-                  <div className="grid gap-4">
+                  <div className="grid gap-3 sm:gap-4 pb-20 sm:pb-0">
                     {playerStats.map((stat, index) => (
                       <Card 
                         key={stat.name} 
@@ -110,9 +112,9 @@ export function StatsPage({ onClose }: { onClose: () => void }) {
                         style={{ borderLeftColor: index === 0 ? '#fbbf24' : index === 1 ? '#94a3b8' : index === 2 ? '#b45309' : 'transparent' }}
                         onClick={() => setSelectedPlayer(stat.name)}
                       >
-                        <CardContent className="p-4 flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                        <CardContent className="p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                          <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0 ${
                               index === 0 ? 'bg-yellow-100 text-yellow-700' : 
                               index === 1 ? 'bg-slate-100 text-slate-700' : 
                               index === 2 ? 'bg-orange-100 text-orange-800' : 
@@ -120,33 +122,33 @@ export function StatsPage({ onClose }: { onClose: () => void }) {
                             }`}>
                               {index + 1}
                             </div>
-                            <div>
+                            <div className="flex-1">
                               <h3 className="font-bold text-lg flex items-center gap-2">
                                 {stat.name}
-                                <User className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <User className="w-4 h-4 text-muted-foreground opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" />
                               </h3>
-                              <p className="text-xs text-muted-foreground">最終プレイ: {new Date(stat.lastPlayed).toLocaleDateString()}</p>
+                              <p className="text-xs text-muted-foreground">最終: {new Date(stat.lastPlayed).toLocaleDateString()}</p>
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-2 text-right">
-                            <div>
-                              <p className="text-xs text-muted-foreground">通算スコア</p>
-                              <p className={`font-bold ${stat.totalScore > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          <div className="grid grid-cols-4 gap-2 w-full sm:w-auto text-center sm:text-right">
+                            <div className="flex flex-col items-center sm:items-end">
+                              <p className="text-[10px] text-muted-foreground">スコア</p>
+                              <p className={`font-bold text-sm sm:text-base ${stat.totalScore > 0 ? 'text-green-600' : 'text-red-600'}`}>
                                 {stat.totalScore > 0 ? '+' : ''}{stat.totalScore}
                               </p>
                             </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground">平均順位</p>
-                              <p className="font-bold">{stat.averageRank}</p>
+                            <div className="flex flex-col items-center sm:items-end">
+                              <p className="text-[10px] text-muted-foreground">平均順位</p>
+                              <p className="font-bold text-sm sm:text-base">{stat.averageRank}</p>
                             </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground">トップ率</p>
-                              <p className="font-bold">{stat.topRate}%</p>
+                            <div className="flex flex-col items-center sm:items-end">
+                              <p className="text-[10px] text-muted-foreground">トップ率</p>
+                              <p className="font-bold text-sm sm:text-base">{stat.topRate}%</p>
                             </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground">対戦数</p>
-                              <p className="font-bold">{stat.totalSessions}回</p>
+                            <div className="flex flex-col items-center sm:items-end">
+                              <p className="text-[10px] text-muted-foreground">対戦数</p>
+                              <p className="font-bold text-sm sm:text-base">{stat.totalSessions}</p>
                             </div>
                           </div>
                         </CardContent>
