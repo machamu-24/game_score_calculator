@@ -1,0 +1,21 @@
+{
+  "name": "ゲーム点数計算アプリ",
+  "short_name": "点数計算",
+  "description": "麻雀などのゲームスコアを簡単に記録・計算できるアプリ",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "https://private-us-east-1.manuscdn.com/sessionFile/dhdr7RuU3vNE6eNNJ9trr4/sandbox/dsXfGiyLkfOIkATiEE2Sa8_1770977894626_na1fn_YXBwLWljb24.png?x-oss-process=image/resize,w_192,h_192/format,png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://private-us-east-1.manuscdn.com/sessionFile/dhdr7RuU3vNE6eNNJ9trr4/sandbox/dsXfGiyLkfOIkATiEE2Sa8_1770977894626_na1fn_YXBwLWljb24.png?x-oss-process=image/resize,w_512,h_512/format,png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

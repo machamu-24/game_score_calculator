@@ -2,14 +2,30 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Settings } from "lucide-react";
+import { Settings, Smartphone } from "lucide-react";
 import { useGame } from "@/contexts/GameContext";
+import { haptics } from "@/lib/haptics";
 
 export function SettingsDialog() {
   const { session, updateSettings } = useGame();
   const [isOpen, setIsOpen] = useState(false);
   const [rankPoints, setRankPoints] = useState<[string, string, string, string]>(["50", "10", "-10", "-30"]);
+  const [hapticsEnabled, setHapticsEnabled] = useState(true);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('haptics-enabled');
+    if (stored !== null) {
+      setHapticsEnabled(stored === 'true');
+    }
+  }, []);
+
+  const toggleHaptics = (enabled: boolean) => {
+    setHapticsEnabled(enabled);
+    localStorage.setItem('haptics-enabled', String(enabled));
+    if (enabled) haptics.medium();
+  };
 
   useEffect(() => {
     if (session && isOpen) {
@@ -69,6 +85,24 @@ export function SettingsDialog() {
                   />
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="space-y-4 pt-4 border-t border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-primary" />
+                  <Label className="text-base font-medium">触覚フィードバック</Label>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  ボタン操作時に振動でフィードバックします
+                </p>
+              </div>
+              <Switch
+                checked={hapticsEnabled}
+                onCheckedChange={toggleHaptics}
+              />
             </div>
           </div>
         </div>

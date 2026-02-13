@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useGame } from "@/contexts/GameContext";
+import { haptics } from "@/lib/haptics";
 
 interface ScoreInputProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export function ScoreInput({ isOpen, onClose, gameId, initialRanks }: ScoreInput
   }, [isOpen, session, initialRanks]);
 
   const handleRankChange = (pid: string, value: string) => {
+    if (localStorage.getItem('haptics-enabled') !== 'false') haptics.light();
     setRanks(prev => ({ ...prev, [pid]: value }));
   };
 
@@ -69,6 +71,7 @@ export function ScoreInput({ isOpen, onClose, gameId, initialRanks }: ScoreInput
     } else {
       addGame(parsedRanks, {});
     }
+    if (localStorage.getItem('haptics-enabled') !== 'false') haptics.success();
     onClose();
   };
 

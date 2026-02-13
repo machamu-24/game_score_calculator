@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGame } from "@/contexts/GameContext";
+import { haptics } from "@/lib/haptics";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { DEFAULT_SETTINGS, Player } from "@/lib/types";
 import { nanoid } from "nanoid";
@@ -41,6 +42,7 @@ export function GameSetup() {
   };
 
   const handleStart = () => {
+    if (localStorage.getItem('haptics-enabled') !== 'false') haptics.heavy();
     startNewSession(players, DEFAULT_SETTINGS);
   };
 

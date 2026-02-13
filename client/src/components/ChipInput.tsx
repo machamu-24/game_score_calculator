@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useGame } from "@/contexts/GameContext";
+import { haptics } from "@/lib/haptics";
 
 interface ChipInputProps {
   isOpen: boolean;
@@ -58,6 +59,7 @@ export function ChipInput({ isOpen, onClose }: ChipInputProps) {
     setAmounts({});
     setNote("");
     setError(null);
+    if (localStorage.getItem('haptics-enabled') !== 'false') haptics.success();
     onClose();
   };
 
