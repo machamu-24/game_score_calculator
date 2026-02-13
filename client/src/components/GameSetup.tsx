@@ -45,31 +45,34 @@ export function GameSetup() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[80vh] p-4">
-      <Card className="w-full max-w-md glass-panel border-0 relative">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="absolute top-4 right-4 text-muted-foreground hover:text-primary"
-          onClick={() => setShowManager(true)}
-        >
-          <Users className="w-4 h-4 mr-2" />
-          プレイヤー管理
-        </Button>
+    <div className="flex items-center justify-center min-h-[100dvh] sm:min-h-[80vh] p-0 sm:p-4">
+      <Card className="w-full h-[100dvh] sm:h-auto max-w-md glass-panel border-0 relative flex flex-col rounded-none sm:rounded-xl">
+        <div className="absolute top-4 right-4 z-10">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-muted-foreground hover:text-primary"
+            onClick={() => setShowManager(true)}
+          >
+            <Users className="w-5 h-5 sm:mr-2" />
+            <span className="hidden sm:inline">プレイヤー管理</span>
+          </Button>
+        </div>
 
-        <CardHeader>
+        <CardHeader className="pt-8 pb-4">
           <CardTitle className="text-2xl font-bold text-center text-primary">新規ゲーム設定</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-4">
+        
+        <CardContent className="flex-1 flex flex-col space-y-6 overflow-y-auto pb-24 sm:pb-6">
+          <div className="space-y-6">
             {players.map((player, index) => (
               <div key={player.id} className="flex items-center gap-3">
                 <div 
-                  className="w-4 h-4 rounded-full shrink-0" 
+                  className="w-5 h-5 rounded-full shrink-0 shadow-sm" 
                   style={{ backgroundColor: player.color }}
                 />
-                <div className="grid gap-1.5 w-full">
-                  <Label htmlFor={`player-${index}`} className="text-xs text-muted-foreground">
+                <div className="grid gap-2 w-full">
+                  <Label htmlFor={`player-${index}`} className="text-sm font-medium text-muted-foreground">
                     プレイヤー {index + 1}
                   </Label>
                   <div className="flex gap-2">
@@ -77,20 +80,20 @@ export function GameSetup() {
                       id={`player-${index}`}
                       value={player.name}
                       onChange={(e) => handleNameChange(player.id, e.target.value)}
-                      className="glass-input border-0"
+                      className="glass-input border-0 h-12 text-lg"
                       placeholder={`プレイヤー ${index + 1}`}
                     />
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon" className="shrink-0 bg-background/50 border-0">
-                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                        <Button variant="outline" size="icon" className="shrink-0 w-12 h-12 bg-background/50 border-0">
+                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuContent align="end" className="w-56">
                         <DropdownMenuLabel>登録済みから選択</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         {registeredPlayers.length === 0 ? (
-                          <div className="p-2 text-xs text-muted-foreground text-center">
+                          <div className="p-4 text-sm text-muted-foreground text-center">
                             登録プレイヤーがいません
                           </div>
                         ) : (
@@ -99,6 +102,7 @@ export function GameSetup() {
                               <DropdownMenuItem 
                                 key={rp.id}
                                 onClick={() => selectRegisteredPlayer(player.id, rp.name)}
+                                className="py-3 text-base"
                               >
                                 {rp.name}
                               </DropdownMenuItem>
@@ -106,8 +110,8 @@ export function GameSetup() {
                           </div>
                         )}
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => setShowManager(true)} className="text-primary cursor-pointer">
-                          <UserPlus className="w-3 h-3 mr-2" />
+                        <DropdownMenuItem onClick={() => setShowManager(true)} className="text-primary cursor-pointer py-3 font-medium">
+                          <UserPlus className="w-4 h-4 mr-2" />
                           新規登録...
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -117,15 +121,17 @@ export function GameSetup() {
               </div>
             ))}
           </div>
+        </CardContent>
 
+        <div className="p-4 border-t border-border/50 bg-background/50 backdrop-blur-sm absolute bottom-0 left-0 right-0 sm:relative sm:bg-transparent sm:border-0 sm:backdrop-blur-none">
           <Button 
             onClick={handleStart} 
-            className="w-full h-12 text-lg font-medium shadow-lg hover:shadow-xl transition-all bg-primary text-primary-foreground hover:bg-primary/90"
+            className="w-full h-14 text-xl font-bold shadow-lg hover:shadow-xl transition-all bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl"
           >
-            <Play className="w-5 h-5 mr-2" />
+            <Play className="w-6 h-6 mr-2" />
             セッション開始
           </Button>
-        </CardContent>
+        </div>
       </Card>
 
       {showManager && <PlayerManager onClose={() => setShowManager(false)} />}

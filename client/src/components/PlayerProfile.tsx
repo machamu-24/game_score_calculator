@@ -121,25 +121,25 @@ export function PlayerProfile({ playerName, onClose }: PlayerProfileProps) {
   const unlockedAchievements = achievements.filter(a => a.condition());
 
   return (
-    <div className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <Card className="w-full max-w-4xl h-[90vh] flex flex-col glass-panel border-primary/20 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-        <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 pb-4 bg-muted/20">
+    <div className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-center justify-center p-0 sm:p-4">
+      <Card className="w-full h-full sm:h-[90vh] max-w-4xl flex flex-col glass-panel border-0 sm:border-primary/20 shadow-2xl animate-in fade-in zoom-in-95 duration-200 rounded-none sm:rounded-xl">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 pb-4 bg-muted/20 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-2xl">
               {playerName.charAt(0)}
             </div>
             <div>
               <CardTitle className="text-2xl">{playerName}</CardTitle>
-              <p className="text-xs text-muted-foreground">プレイヤー詳細データ</p>
+              <p className="text-sm text-muted-foreground">プレイヤー詳細データ</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="w-5 h-5" />
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-12 w-12">
+            <X className="w-8 h-8" />
           </Button>
         </CardHeader>
         
-        <CardContent className="flex-1 overflow-hidden p-6 space-y-6">
-          <ScrollArea className="h-full pr-4">
+        <CardContent className="flex-1 overflow-hidden p-4 sm:p-6 space-y-6">
+          <ScrollArea className="h-full pr-0 sm:pr-4">
             {/* Achievements Section */}
             {unlockedAchievements.length > 0 && (
               <div className="mb-8">
@@ -147,15 +147,15 @@ export function PlayerProfile({ playerName, onClose }: PlayerProfileProps) {
                   <Crown className="w-5 h-5 text-primary" />
                   獲得称号
                 </h3>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2 sm:gap-3">
                   {unlockedAchievements.map(achievement => (
                     <div 
                       key={achievement.id}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-full border ${achievement.color} shadow-sm transition-all hover:scale-105`}
+                      className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 rounded-full border ${achievement.color} shadow-sm transition-all hover:scale-105`}
                       title={achievement.description}
                     >
                       {achievement.icon}
-                      <span className="font-bold text-sm">{achievement.title}</span>
+                      <span className="font-bold text-xs sm:text-sm">{achievement.title}</span>
                     </div>
                   ))}
                 </div>
@@ -163,7 +163,7 @@ export function PlayerProfile({ playerName, onClose }: PlayerProfileProps) {
             )}
 
             {/* Key Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
               <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
                 <CardContent className="p-4 flex flex-col items-center justify-center text-center">
                   <div className="mb-2 p-2 bg-blue-200 dark:bg-blue-800 rounded-full">

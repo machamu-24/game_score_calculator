@@ -76,59 +76,68 @@ export function ScoreInput({ isOpen, onClose, gameId, initialRanks }: ScoreInput
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="glass-panel border-0 sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-center">
-            {gameId ? "ゲーム結果の編集" : "ゲーム結果の入力"}
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="grid gap-6 py-4">
-          <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground text-center mb-2">
-            <div className="col-span-6 text-left pl-2">プレイヤー</div>
-            <div className="col-span-6">順位</div>
-          </div>
-
-          {session.players.map((player) => (
-            <div key={player.id} className="grid grid-cols-12 items-center gap-4">
-              <Label htmlFor={`rank-${player.id}`} className="col-span-6 font-medium truncate pl-2 text-base">
-                {player.name}
-              </Label>
-              
-              <div className="col-span-6">
-                <Select 
-                  value={ranks[player.id]} 
-                  onValueChange={(val) => handleRankChange(player.id, val)}
-                >
-                  <SelectTrigger className="glass-input border-0 text-center">
-                    <SelectValue placeholder="-" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1位</SelectItem>
-                    <SelectItem value="2">2位</SelectItem>
-                    <SelectItem value="3">3位</SelectItem>
-                    <SelectItem value="4">4位</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          ))}
+      <DialogContent className="glass-panel border-0 w-full h-full sm:h-auto sm:max-w-md p-0 sm:p-6 flex flex-col">
+        <div className="p-6 flex-1 overflow-y-auto">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-2xl font-bold text-center">
+              {gameId ? "ゲーム結果の編集" : "ゲーム結果の入力"}
+            </DialogTitle>
+          </DialogHeader>
           
-          {error && (
-            <div className="text-destructive text-sm text-center font-medium bg-destructive/10 p-2 rounded">
-              {error}
+          <div className="grid gap-6 py-2">
+            <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground text-center mb-2 px-2">
+              <div className="col-span-6 text-left">プレイヤー</div>
+              <div className="col-span-6">順位</div>
             </div>
-          )}
+
+            {session.players.map((player) => (
+              <div key={player.id} className="grid grid-cols-12 items-center gap-4 p-2 rounded-lg active:bg-muted/50 transition-colors">
+                <Label htmlFor={`rank-${player.id}`} className="col-span-6 font-bold truncate text-lg">
+                  {player.name}
+                </Label>
+                
+                <div className="col-span-6">
+                  <Select 
+                    value={ranks[player.id]} 
+                    onValueChange={(val) => handleRankChange(player.id, val)}
+                  >
+                    <SelectTrigger className="glass-input border-0 text-center h-12 text-lg font-medium">
+                      <SelectValue placeholder="-" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1" className="text-lg py-3">1位</SelectItem>
+                      <SelectItem value="2" className="text-lg py-3">2位</SelectItem>
+                      <SelectItem value="3" className="text-lg py-3">3位</SelectItem>
+                      <SelectItem value="4" className="text-lg py-3">4位</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            ))}
+            
+            {error && (
+              <div className="text-destructive text-base text-center font-bold bg-destructive/10 p-4 rounded-lg animate-in fade-in slide-in-from-top-2">
+                {error}
+              </div>
+            )}
+          </div>
         </div>
 
-        <DialogFooter className="sm:justify-center">
+        <div className="p-4 border-t border-border/50 bg-background/50 backdrop-blur-sm mt-auto sm:mt-0">
           <Button 
             onClick={validateAndSubmit} 
-            className="w-full sm:w-auto min-w-[120px] bg-primary text-primary-foreground hover:bg-primary/90"
+            className="w-full h-14 text-lg font-bold shadow-lg bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl"
           >
-            保存
+            保存する
           </Button>
-        </DialogFooter>
+          <Button 
+            variant="ghost" 
+            onClick={onClose}
+            className="w-full mt-2 h-12 text-muted-foreground"
+          >
+            キャンセル
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
