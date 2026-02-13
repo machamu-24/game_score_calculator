@@ -34,17 +34,18 @@ function GameDashboard() {
   if (!session) {
     return (
       <>
-        <GameSetup />
-        <div className="fixed bottom-4 right-4">
+        <div className="fixed top-4 right-4 z-50">
           <Button 
             variant="outline" 
-            className="shadow-lg bg-background/80 backdrop-blur"
+            size="sm"
+            className="shadow-lg bg-background/80 backdrop-blur border-primary/20 hover:bg-background/90"
             onClick={() => setIsStatsOpen(true)}
           >
             <History className="w-4 h-4 mr-2" />
             戦績・履歴を見る
           </Button>
         </div>
+        <GameSetup />
         {isStatsOpen && <StatsPage onClose={() => setIsStatsOpen(false)} />}
       </>
     );
