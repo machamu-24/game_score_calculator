@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Edit2, Trash2, Coins } from "lucide-react";
 import { useState } from "react";
 import { ScoreInput } from "./ScoreInput";
+import { haptics } from "@/lib/haptics";
 
 export function ScoreTable() {
   const { session, deleteGame, deleteChipLog } = useGame();
@@ -89,7 +90,10 @@ export function ScoreTable() {
                           variant="ghost" 
                           size="icon" 
                           className="h-8 w-8 hover:bg-white/10 hover:text-destructive"
-                          onClick={() => deleteGame(game.id)}
+                          onClick={() => {
+                            if (localStorage.getItem('haptics-enabled') !== 'false') haptics.heavy();
+                            deleteGame(game.id);
+                          }}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -154,7 +158,10 @@ export function ScoreTable() {
                         variant="ghost" 
                         size="icon" 
                         className="h-8 w-8 hover:bg-white/10 hover:text-destructive"
-                        onClick={() => deleteChipLog(log.id)}
+                        onClick={() => {
+                          if (localStorage.getItem('haptics-enabled') !== 'false') haptics.heavy();
+                          deleteChipLog(log.id);
+                        }}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

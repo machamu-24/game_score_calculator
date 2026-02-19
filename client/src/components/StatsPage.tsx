@@ -227,23 +227,33 @@ export function StatsPage({ onClose }: { onClose: () => void }) {
                   <div className="space-y-4">
                     {history.map((item) => (
                       <Card key={item.id} className="relative group">
-                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
-                                <X className="w-4 h-4" />
+                                <Trash2 className="w-4 h-4" />
                               </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
                                 <AlertDialogTitle>この履歴を削除しますか？</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  {new Date(item.date).toLocaleString()} の対戦記録を削除します。
+                                  {new Date(item.date).toLocaleString()} の対戦記録を削除します。<br/>
+                                  この操作は取り消せません。
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>キャンセル</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => deleteHistoryItem(item.id)} className="bg-destructive text-destructive-foreground">
+                                <AlertDialogAction 
+                                  onClick={() => {
+                                    if (localStorage.getItem('haptics-enabled') !== 'false') {
+                                      // Dynamic import to avoid circular dependency if haptics is not available in this context
+                                      import('@/lib/haptics').then(({ haptics }) => haptics.heavy());
+                                    }
+                                    deleteHistoryItem(item.id);
+                                  }} 
+                                  className="bg-destructive text-destructive-foreground"
+                                >
                                   削除する
                                 </AlertDialogAction>
                               </AlertDialogFooter>
