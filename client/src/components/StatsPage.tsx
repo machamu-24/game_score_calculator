@@ -18,10 +18,13 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useState } from "react";
 import { PlayerProfile } from "./PlayerProfile";
+import { HistoryDetail } from "./HistoryDetail";
+import { SessionHistoryItem } from "@/lib/types";
 
 export function StatsPage({ onClose }: { onClose: () => void }) {
   const { playerStats, history, deleteHistoryItem, clearHistory } = useHistory();
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+  const [selectedHistoryItem, setSelectedHistoryItem] = useState<SessionHistoryItem | null>(null);
 
   // Prepare data for the chart
   // Sort history by date ascending for the chart
@@ -73,6 +76,13 @@ export function StatsPage({ onClose }: { onClose: () => void }) {
         <PlayerProfile 
           playerName={selectedPlayer} 
           onClose={() => setSelectedPlayer(null)} 
+        />
+      )}
+
+      {selectedHistoryItem && (
+        <HistoryDetail
+          historyItem={selectedHistoryItem}
+          onClose={() => setSelectedHistoryItem(null)}
         />
       )}
       
@@ -226,8 +236,15 @@ export function StatsPage({ onClose }: { onClose: () => void }) {
                 ) : (
                   <div className="space-y-4">
                     {history.map((item) => (
-                      <Card key={item.id} className="relative group">
-                        <div className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <Card 
+                        key={item.id} 
+                        className="relative group cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => setSelectedHistoryItem(item)}
+                      >
+                        <div 
+                          className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">

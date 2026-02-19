@@ -52,11 +52,15 @@ export interface SessionHistoryItem {
   id: string;
   date: number;
   players: {
+    id?: string; // 詳細表示用にIDを追加（既存データ互換のためoptional）
     name: string;
     totalScore: number;
     rank: number; // セッション内での順位
   }[];
   gameCount: number; // このセッションで行われたゲーム数
+  // 詳細履歴閲覧用に追加
+  games?: GameResult[];
+  chipLogs?: ChipLog[];
 }
 
 // 新規追加: プレイヤー通算成績用の型定義

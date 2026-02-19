@@ -75,6 +75,7 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
   const saveSession = (session: Session) => {
     // Calculate ranks for this session
     const playerScores = session.players.map(p => ({
+      id: p.id,
       name: p.name,
       totalScore: session.grandTotal[p.id] || 0
     }));
@@ -87,10 +88,14 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
       date: Date.now(),
       gameCount: session.games.length,
       players: playerScores.map((p, index) => ({
+        id: p.id,
         name: p.name,
         totalScore: p.totalScore,
         rank: index + 1
-      }))
+      })),
+      // 詳細データを保存
+      games: session.games,
+      chipLogs: session.chipLogs
     };
 
     const newHistory = [historyItem, ...history];
