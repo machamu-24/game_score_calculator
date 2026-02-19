@@ -34,7 +34,8 @@ function GameDashboard() {
   if (!session) {
     return (
       <>
-        <div className="fixed top-4 right-4 z-50">
+        <div className="fixed top-4 right-4 z-50 flex gap-2">
+          <SettingsDialog />
           <Button 
             variant="outline" 
             size="sm"

@@ -39,15 +39,15 @@ export function SettingsDialog() {
     }
   }, [session, isOpen]);
 
-  if (!session) return null;
-
   const handleSave = () => {
-    const newPoints = rankPoints.map(p => parseInt(p));
-    if (newPoints.some(isNaN)) return;
+    if (session) {
+      const newPoints = rankPoints.map(p => parseInt(p));
+      if (newPoints.some(isNaN)) return;
 
-    updateSettings({
-      rankPoints: newPoints as [number, number, number, number]
-    });
+      updateSettings({
+        rankPoints: newPoints as [number, number, number, number]
+      });
+    }
     setIsOpen(false);
   };
 
@@ -63,33 +63,35 @@ export function SettingsDialog() {
           <DialogTitle>ゲーム設定</DialogTitle>
         </DialogHeader>
         <div className="grid gap-6 py-4">
-          <div className="space-y-4">
-            <h4 className="font-medium leading-none">順位点（ウマ・オカ）</h4>
-            <p className="text-sm text-muted-foreground">
-              1位〜4位に付与されるポイントを設定してください。
-            </p>
-            <div className="grid grid-cols-4 gap-2">
-              {rankPoints.map((point, index) => (
-                <div key={index} className="space-y-2">
-                  <Label className="text-xs text-center block text-muted-foreground">
-                    {index + 1}位
-                  </Label>
-                  <Input
-                    type="number"
-                    value={point}
-                    onChange={(e) => {
-                      const newPoints = [...rankPoints] as [string, string, string, string];
-                      newPoints[index] = e.target.value;
-                      setRankPoints(newPoints);
-                    }}
-                    className="text-center glass-input font-mono"
-                  />
-                </div>
-              ))}
+          {session && (
+            <div className="space-y-4">
+              <h4 className="font-medium leading-none">順位点（ウマ・オカ）</h4>
+              <p className="text-sm text-muted-foreground">
+                1位〜4位に付与されるポイントを設定してください。
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {rankPoints.map((point, index) => (
+                  <div key={index} className="space-y-2">
+                    <Label className="text-xs text-center block text-muted-foreground">
+                      {index + 1}位
+                    </Label>
+                    <Input
+                      type="number"
+                      value={point}
+                      onChange={(e) => {
+                        const newPoints = [...rankPoints] as [string, string, string, string];
+                        newPoints[index] = e.target.value;
+                        setRankPoints(newPoints);
+                      }}
+                      className="text-center glass-input font-mono"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          <div className="space-y-4 pt-4 border-t border-white/10">
+          <div className={`space-y-4 ${session ? 'pt-4 border-t border-white/10' : ''}`}>
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
