@@ -7,6 +7,8 @@ interface HistoryContextType {
   saveSession: (session: Session) => void;
   deleteHistoryItem: (id: string) => void;
   clearHistory: () => void;
+  importHistory: (jsonData: string) => boolean;
+  exportHistory: () => string;
 }
 
 const HistoryContext = createContext<HistoryContextType | undefined>(undefined);
@@ -117,8 +119,41 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(STORAGE_KEY);
   };
 
+  const exportHistory = () => {
+    return JSON.stringify(history);
+  };
+
+  const importHistory = (jsonData: string) => {
+    try {
+      const parsed = JSON.parse(jsonData);
+      if (!Array.isArray(parsed)) {
+        return false;
+      }
+      
+      // 既存の履歴とマージする（IDで重複チェック）
+      const existingIds = new Set(history.map(h => h.id));
+      const newItems = parsed.filter((item: any) => !existingIds.has(item.id));
+      
+      if (newItems.length === 0) {
+        return true; // 重複のみだった場合も成功扱い
+      }
+      
+      const mergedHistory = [...newItems, ...history];
+      // 日付順（新しい順）にソート
+      mergedHistory.sort((a, b) => b.date - a.date);
+      
+      setHistory(mergedHistory);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedHistory));
+      calculateStats(mergedHistory);
+      return true;
+    } catch (e) {
+      console.error("Failed to import history", e);
+      return false;
+    }
+  };
+
   return (
-    <HistoryContext.Provider value={{ history, playerStats, saveSession, deleteHistoryItem, clearHistory }}>
+    <HistoryContext.Provider value={{ history, playerStats, saveSession, deleteHistoryItem, clearHistory, importHistory, exportHistory }}>
       {children}
     </HistoryContext.Provider>
   );

@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Settings, Smartphone } from "lucide-react";
 import { useGame } from "@/contexts/GameContext";
 import { haptics } from "@/lib/haptics";
+import { DataManagement } from "./DataManagement";
 
 export function SettingsDialog() {
   const { session, updateSettings } = useGame();
@@ -104,6 +105,10 @@ export function SettingsDialog() {
                 onCheckedChange={toggleHaptics}
               />
             </div>
+          </div>
+
+          <div className="space-y-4 pt-4 border-t border-white/10">
+            <DataManagement />
           </div>
         </div>
         <DialogFooter>
