@@ -101,7 +101,7 @@ export const appRouter = router({
       .input(z.object({
         sessionId: z.string(),
         endedAt: z.number(),
-        finalScores: z.record(z.number()),
+        finalScores: z.any(),
       }))
       .mutation(async ({ ctx, input }) => {
         await db.endSession(input.sessionId, ctx.user.id, input.endedAt, input.finalScores);
