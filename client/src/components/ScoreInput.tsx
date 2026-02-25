@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { useGame } from "@/contexts/GameContext";
 import { haptics } from "@/lib/haptics";
 
@@ -16,15 +16,15 @@ interface ScoreInputProps {
 
 export function ScoreInput({ isOpen, onClose, gameId, initialRanks }: ScoreInputProps) {
   const { session, addGame, updateGame } = useGame();
-  const [ranks, setRanks] = useState<Record<string, string>>({});
+  const [ranks, setRanks] = useState<Record<string, number | null>>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && session) {
-      const initRanks: Record<string, string> = {};
+      const initRanks: Record<string, number | null> = {};
       
       session.players.forEach(p => {
-        initRanks[p.id] = initialRanks ? String(initialRanks[p.id] || "") : "";
+        initRanks[p.id] = initialRanks ? (initialRanks[p.id] || null) : null;
       });
       
       setRanks(initRanks);
@@ -34,7 +34,8 @@ export function ScoreInput({ isOpen, onClose, gameId, initialRanks }: ScoreInput
 
   const handleRankChange = (pid: string, value: string) => {
     if (localStorage.getItem('haptics-enabled') !== 'false') haptics.light();
-    setRanks(prev => ({ ...prev, [pid]: value }));
+    const numValue = value ? parseInt(value, 10) : null;
+    setRanks(prev => ({ ...prev, [pid]: numValue }));
   };
 
   const validateAndSubmit = () => {
@@ -45,9 +46,8 @@ export function ScoreInput({ isOpen, onClose, gameId, initialRanks }: ScoreInput
     let hasError = false;
 
     session.players.forEach(p => {
-      // Parse Rank
-      const r = parseInt(ranks[p.id]);
-      if (isNaN(r) || r < 1 || r > 4) {
+      const r = ranks[p.id];
+      if (r === null || r === undefined || r < 1 || r > 4) {
         hasError = true;
       } else {
         parsedRanks[p.id] = r;
@@ -62,7 +62,7 @@ export function ScoreInput({ isOpen, onClose, gameId, initialRanks }: ScoreInput
 
     // Validate unique ranks
     if (rankCounts.size !== 4) {
-      setError("各順位（1位〜4位）は必ず1人のプレイヤーに割り当ててください。");
+      setError("各順位（１位〜４位）は必ず１人のプレイヤーに割り当ててください。");
       return;
     }
 
@@ -100,20 +100,18 @@ export function ScoreInput({ isOpen, onClose, gameId, initialRanks }: ScoreInput
                 </Label>
                 
                 <div className="col-span-6">
-                  <Select 
-                    value={ranks[player.id]} 
-                    onValueChange={(val) => handleRankChange(player.id, val)}
+                  <select
+                    id={`rank-${player.id}`}
+                    value={ranks[player.id]?.toString() || ""}
+                    onChange={(e) => handleRankChange(player.id, e.target.value)}
+                    className="glass-input border-0 text-center h-12 text-lg font-medium w-full rounded-lg bg-background/50 backdrop-blur-sm"
                   >
-                    <SelectTrigger className="glass-input border-0 text-center h-12 text-lg font-medium">
-                      <SelectValue placeholder="-" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1" className="text-lg py-3">1位</SelectItem>
-                      <SelectItem value="2" className="text-lg py-3">2位</SelectItem>
-                      <SelectItem value="3" className="text-lg py-3">3位</SelectItem>
-                      <SelectItem value="4" className="text-lg py-3">4位</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <option value="">-</option>
+                    <option value="1">1位</option>
+                    <option value="2">2位</option>
+                    <option value="3">3位</option>
+                    <option value="4">4位</option>
+                  </select>
                 </div>
               </div>
             ))}

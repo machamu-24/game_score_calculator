@@ -1,72 +1,112 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from "react";
 import { GameResult, GameSettings, Player, Session, DEFAULT_SETTINGS, ChipLog } from "@/lib/types";
 import { calculateTotalPoints, calculateTotalChips, calculateGrandTotal } from "@/lib/calculator";
 import { nanoid } from "nanoid";
 import { useHistory } from "./HistoryContext";
+import { trpc } from "@/lib/trpc";
 
 interface GameContextType {
   session: Session | null;
-  startNewSession: (players: Player[], settings: GameSettings) => void;
+  isLoading: boolean;
+  startNewSession: (players: Player[], settings: GameSettings) => Promise<void>;
   addGame: (ranks: Record<string, number>, adjustments?: Record<string, number>) => void;
   updateGame: (gameId: string, ranks: Record<string, number>, adjustments?: Record<string, number>) => void;
   deleteGame: (gameId: string) => void;
   addChipLog: (amounts: Record<string, number>, note?: string) => void;
   deleteChipLog: (logId: string) => void;
   updateSettings: (newSettings: GameSettings) => void;
-  resetSession: () => void;
+  resetSession: () => Promise<void>;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(() => {
-    const saved = localStorage.getItem("mahjong_session_v3");
-    return saved ? JSON.parse(saved) : null;
-  });
-  
   const { saveSession } = useHistory();
+  const utils = trpc.useUtils();
 
-  useEffect(() => {
-    if (session) {
-      localStorage.setItem("mahjong_session_v3", JSON.stringify(session));
-    } else {
-      localStorage.removeItem("mahjong_session_v3");
+  // アクティブセッションを取得
+  const { data: activeSessionData, isLoading } = trpc.session.getActive.useQuery(undefined, {
+    refetchOnMount: true,
+  });
+
+  // セッション作成
+  const createSessionMutation = trpc.session.create.useMutation();
+
+  // セッション終了
+  const endSessionMutation = trpc.session.end.useMutation();
+
+  // ゲーム作成
+  const createGameMutation = trpc.games.create.useMutation({
+    onSuccess: () => {
+      utils.session.getActive.invalidate();
+    },
+  });
+
+  // ゲーム更新
+  const updateGameMutation = trpc.games.update.useMutation({
+    onSuccess: () => {
+      utils.session.getActive.invalidate();
+    },
+  });
+
+  // ゲーム削除
+  const deleteGameMutation = trpc.games.delete.useMutation({
+    onSuccess: () => {
+      utils.session.getActive.invalidate();
+    },
+  });
+
+  // チップログ作成
+  const createChipMutation = trpc.chips.create.useMutation({
+    onSuccess: () => {
+      utils.session.getActive.invalidate();
+    },
+  });
+
+  // チップログ削除
+  const deleteChipMutation = trpc.chips.delete.useMutation({
+    onSuccess: () => {
+      utils.session.getActive.invalidate();
+    },
+  });
+
+  // サーバーからのデータをローカルセッションに変換
+  const session = useMemo(() => {
+    if (!activeSessionData) {
+      return null;
     }
-  }, [session]);
 
-  const startNewSession = (players: Player[], settings: GameSettings = DEFAULT_SETTINGS) => {
-    const newSession: Session = {
-      id: nanoid(),
-      startedAt: Date.now(),
-      players,
-      settings,
-      games: [],
-      chipLogs: [],
-      totalGamePoints: {},
-      totalChips: {},
-      grandTotal: {},
-    };
-    players.forEach(p => {
-      newSession.totalGamePoints[p.id] = 0;
-      newSession.totalChips[p.id] = 0;
-      newSession.grandTotal[p.id] = 0;
-    });
-    setSession(newSession);
-  };
-
-  const updateSessionTotals = (currentSession: Session) => {
-    const playerIds = currentSession.players.map(p => p.id);
-    const totalGamePoints = calculateTotalPoints(currentSession.games, playerIds);
-    const totalChips = calculateTotalChips(currentSession.chipLogs, playerIds);
+    const playerIds = activeSessionData.players.map((p: Player) => p.id);
+    const totalGamePoints = calculateTotalPoints(activeSessionData.games, playerIds);
+    const totalChips = calculateTotalChips(activeSessionData.chipLogs, playerIds);
     const grandTotal = calculateGrandTotal(totalGamePoints, totalChips, playerIds);
 
     return {
-      ...currentSession,
+      id: activeSessionData.id,
+      startedAt: activeSessionData.startedAt,
+      players: activeSessionData.players,
+      settings: { rankPoints: activeSessionData.rankPoints },
+      games: activeSessionData.games,
+      chipLogs: activeSessionData.chipLogs,
       totalGamePoints,
       totalChips,
-      grandTotal
+      grandTotal,
     };
+  }, [activeSessionData]);
+
+  const startNewSession = async (players: Player[], settings: GameSettings = DEFAULT_SETTINGS) => {
+    const sessionId = nanoid();
+    await createSessionMutation.mutateAsync({
+      id: sessionId,
+      startedAt: Date.now(),
+      rankPoints: settings.rankPoints,
+      players,
+    });
+    // クエリを再取得してセッションを更新
+    await utils.session.getActive.invalidate();
   };
+
+
 
   const addGame = (ranks: Record<string, number>, adjustments: Record<string, number> = {}) => {
     if (!session) return;
@@ -74,20 +114,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     import("@/lib/calculator").then(({ calculateGamePoints }) => {
       const { finalPoints } = calculateGamePoints(ranks, adjustments, session.settings, session.players);
       
-      const newGame: GameResult = {
+      createGameMutation.mutate({
         id: nanoid(),
+        sessionId: session.id,
         timestamp: Date.now(),
         ranks,
         adjustments,
-        finalPoints
-      };
-
-      const updatedSession = {
-        ...session,
-        games: [...session.games, newGame]
-      };
-
-      setSession(updateSessionTotals(updatedSession));
+        finalPoints,
+      });
     });
   };
 
@@ -97,101 +131,76 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     import("@/lib/calculator").then(({ calculateGamePoints }) => {
       const { finalPoints } = calculateGamePoints(ranks, adjustments, session.settings, session.players);
       
-      const updatedGames = session.games.map(g => {
-        if (g.id === gameId) {
-          return {
-            ...g,
-            ranks,
-            adjustments,
-            finalPoints
-          };
-        }
-        return g;
+      updateGameMutation.mutate({
+        id: gameId,
+        sessionId: session.id,
+        ranks,
+        adjustments,
+        finalPoints,
       });
-
-      const updatedSession = {
-        ...session,
-        games: updatedGames
-      };
-
-      setSession(updateSessionTotals(updatedSession));
     });
   };
 
   const deleteGame = (gameId: string) => {
     if (!session) return;
-    
-    const updatedGames = session.games.filter(g => g.id !== gameId);
-    const updatedSession = {
-      ...session,
-      games: updatedGames
-    };
-
-    setSession(updateSessionTotals(updatedSession));
+    deleteGameMutation.mutate({
+      id: gameId,
+      sessionId: session.id,
+    });
   };
 
   const addChipLog = (amounts: Record<string, number>, note?: string) => {
     if (!session) return;
 
-    const newLog: ChipLog = {
+    createChipMutation.mutate({
       id: nanoid(),
+      sessionId: session.id,
       timestamp: Date.now(),
       amounts,
-      note
-    };
-
-    const updatedSession = {
-      ...session,
-      chipLogs: [...session.chipLogs, newLog]
-    };
-
-    setSession(updateSessionTotals(updatedSession));
+      note,
+    });
   };
 
   const deleteChipLog = (logId: string) => {
     if (!session) return;
 
-    const updatedLogs = session.chipLogs.filter(l => l.id !== logId);
-    const updatedSession = {
-      ...session,
-      chipLogs: updatedLogs
-    };
-
-    setSession(updateSessionTotals(updatedSession));
+    deleteChipMutation.mutate({
+      id: logId,
+      sessionId: session.id,
+    });
   };
 
   const updateSettings = (newSettings: GameSettings) => {
     if (!session) return;
 
-    import("@/lib/calculator").then(({ calculateGamePoints }) => {
-      const updatedGames = session.games.map(game => {
-        const { finalPoints } = calculateGamePoints(game.ranks, game.adjustments, newSettings, session.players);
-        return {
-          ...game,
-          finalPoints
-        };
-      });
-
-      const updatedSession = {
-        ...session,
-        settings: newSettings,
-        games: updatedGames
-      };
-
-      setSession(updateSessionTotals(updatedSession));
-    });
+    // TODO: 設定変更機能は後で実装
+    // 現在はsessionがuseMemoで管理されているため、直接更新できない
+    console.warn('updateSettings is not implemented yet');
   };
 
-  const resetSession = () => {
+  const resetSession = async () => {
     if (session) {
-      saveSession(session); // Save to history before resetting
+      // セッションを終了してhistoryに保存
+      await endSessionMutation.mutateAsync({
+        sessionId: session.id,
+        endedAt: Date.now(),
+        finalScores: session.grandTotal,
+      });
+      
+      // 履歴に保存
+      await saveSession(session);
     }
-    setSession(null);
+    
+    await utils.session.getActive.invalidate();
   };
+
+  // localStorageからのマイグレーション（初回のみ）
+  // TODO: マイグレーション機能は後で実装
 
   return (
     <GameContext.Provider value={{ 
       session, 
+      isLoading,
       startNewSession, 
       addGame, 
       updateGame, 

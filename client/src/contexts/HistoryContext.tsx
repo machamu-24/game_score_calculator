@@ -1,42 +1,59 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useMemo, useRef } from "react";
 import { Session, SessionHistoryItem, PlayerStats } from "@/lib/types";
+import { trpc } from "@/lib/trpc";
+import { nanoid } from "nanoid";
 
 interface HistoryContextType {
   history: SessionHistoryItem[];
   playerStats: PlayerStats[];
-  saveSession: (session: Session) => void;
-  deleteHistoryItem: (id: string) => void;
-  clearHistory: () => void;
-  importHistory: (jsonData: string) => boolean;
+  isLoading: boolean;
+  saveSession: (session: Session) => Promise<void>;
+  deleteHistoryItem: (id: string) => Promise<void>;
+  clearHistory: () => Promise<void>;
+  importHistory: (jsonData: string) => Promise<boolean>;
   exportHistory: () => string;
 }
 
 const HistoryContext = createContext<HistoryContextType | undefined>(undefined);
 
-const STORAGE_KEY = "mahjong_app_history";
-
 export function HistoryProvider({ children }: { children: React.ReactNode }) {
-  const [history, setHistory] = useState<SessionHistoryItem[]>([]);
-  const [playerStats, setPlayerStats] = useState<PlayerStats[]>([]);
+  const utils = trpc.useUtils();
 
-  // Load history from local storage on mount
-  useEffect(() => {
-    const savedHistory = localStorage.getItem(STORAGE_KEY);
-    if (savedHistory) {
-      try {
-        const parsed = JSON.parse(savedHistory);
-        setHistory(parsed);
-        calculateStats(parsed);
-      } catch (e) {
-        console.error("Failed to parse history", e);
-      }
+  // 履歴リストを取得
+  const { data: history = [], isLoading } = trpc.history.list.useQuery();
+
+  // 履歴作成
+  const createHistoryMutation = trpc.history.create.useMutation({
+    onSuccess: () => {
+      utils.history.list.invalidate();
+    },
+  });
+
+  // 履歴削除
+  const deleteHistoryMutation = trpc.history.delete.useMutation({
+    onSuccess: () => {
+      utils.history.list.invalidate();
+    },
+  });
+
+  // 履歴インポート
+  const importHistoryMutation = trpc.history.import.useMutation({
+    onSuccess: () => {
+      utils.history.list.invalidate();
+    },
+  });
+
+
+
+  // 履歴から統計を計算
+  const playerStats = useMemo(() => {
+    if (history.length === 0) {
+      return [];
     }
-  }, []);
 
-  const calculateStats = (historyItems: SessionHistoryItem[]) => {
     const statsMap = new Map<string, PlayerStats>();
 
-    historyItems.forEach(session => {
+    history.forEach(session => {
       session.players.forEach(p => {
         const current = statsMap.get(p.name) || {
           name: p.name,
@@ -54,7 +71,7 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
         current.totalGames += session.gameCount;
         current.totalScore += p.totalScore;
         if (p.rank === 1) current.topCount += 1;
-        current.averageRank += p.rank; // Will divide later
+        current.averageRank += p.rank;
         current.lastPlayed = Math.max(current.lastPlayed, session.date);
 
         statsMap.set(p.name, current);
@@ -68,25 +85,23 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
       averageRank: parseFloat((stat.averageRank / stat.totalSessions).toFixed(2))
     }));
 
-    // Sort by total score descending
     statsArray.sort((a, b) => b.totalScore - a.totalScore);
 
-    setPlayerStats(statsArray);
-  };
+    return statsArray;
+  }, [history]);
 
-  const saveSession = (session: Session) => {
-    // Calculate ranks for this session
+  const saveSession = async (session: Session) => {
     const playerScores = session.players.map(p => ({
       id: p.id,
       name: p.name,
       totalScore: session.grandTotal[p.id] || 0
     }));
 
-    // Sort by score descending to determine rank
     playerScores.sort((a, b) => b.totalScore - a.totalScore);
 
-    const historyItem: SessionHistoryItem = {
+    const historyItem = {
       id: session.id,
+      sessionId: session.id,
       date: Date.now(),
       gameCount: session.games.length,
       players: playerScores.map((p, index) => ({
@@ -95,56 +110,51 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
         totalScore: p.totalScore,
         rank: index + 1
       })),
-      // 詳細データを保存
-      games: session.games,
-      chipLogs: session.chipLogs
     };
 
-    const newHistory = [historyItem, ...history];
-    setHistory(newHistory);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newHistory));
-    calculateStats(newHistory);
+    await createHistoryMutation.mutateAsync(historyItem);
   };
 
-  const deleteHistoryItem = (id: string) => {
-    const newHistory = history.filter(item => item.id !== id);
-    setHistory(newHistory);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newHistory));
-    calculateStats(newHistory);
+  const deleteHistoryItem = async (id: string) => {
+    await deleteHistoryMutation.mutateAsync({ id });
   };
 
-  const clearHistory = () => {
-    setHistory([]);
-    setPlayerStats([]);
-    localStorage.removeItem(STORAGE_KEY);
+  const clearHistory = async () => {
+    // すべての履歴を削除
+    for (const item of history) {
+      await deleteHistoryMutation.mutateAsync({ id: item.id });
+    }
   };
 
   const exportHistory = () => {
     return JSON.stringify(history);
   };
 
-  const importHistory = (jsonData: string) => {
+  const importHistory = async (jsonData: string): Promise<boolean> => {
     try {
       const parsed = JSON.parse(jsonData);
       if (!Array.isArray(parsed)) {
         return false;
       }
-      
-      // 既存の履歴とマージする（IDで重複チェック）
+
+      // 既存の履歴IDをチェック
       const existingIds = new Set(history.map(h => h.id));
       const newItems = parsed.filter((item: any) => !existingIds.has(item.id));
-      
+
       if (newItems.length === 0) {
-        return true; // 重複のみだった場合も成功扱い
+        return true;
       }
-      
-      const mergedHistory = [...newItems, ...history];
-      // 日付順（新しい順）にソート
-      mergedHistory.sort((a, b) => b.date - a.date);
-      
-      setHistory(mergedHistory);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedHistory));
-      calculateStats(mergedHistory);
+
+      // sessionIdがない場合はidを使用
+      const itemsWithSessionId = newItems.map((item: any) => ({
+        ...item,
+        sessionId: item.sessionId || item.id,
+      }));
+
+      await importHistoryMutation.mutateAsync({
+        histories: itemsWithSessionId,
+      });
+
       return true;
     } catch (e) {
       console.error("Failed to import history", e);
@@ -152,8 +162,20 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // localStorageからのマイグレーション（初回のみ）
+  // TODO: マイグレーション機能は後で実装
+
   return (
-    <HistoryContext.Provider value={{ history, playerStats, saveSession, deleteHistoryItem, clearHistory, importHistory, exportHistory }}>
+    <HistoryContext.Provider value={{ 
+      history, 
+      playerStats, 
+      isLoading,
+      saveSession, 
+      deleteHistoryItem, 
+      clearHistory, 
+      importHistory, 
+      exportHistory 
+    }}>
       {children}
     </HistoryContext.Provider>
   );
