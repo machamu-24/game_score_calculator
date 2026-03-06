@@ -107,6 +107,20 @@ export const appRouter = router({
         await db.endSession(input.sessionId, ctx.user.id, input.endedAt, input.finalScores);
         return { success: true };
       }),
+
+    updateSettings: protectedProcedure
+      .input(z.object({
+        sessionId: z.string(),
+        rankPoints: z.tuple([z.number(), z.number(), z.number(), z.number()]),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const session = await db.getSessionById(input.sessionId, ctx.user.id);
+        if (!session) throw new Error('Session not found');
+        await db.updateSession(input.sessionId, ctx.user.id, {
+          rankPoints: input.rankPoints,
+        });
+        return { success: true };
+      }),
   }),
 
   // ==================== Game Results ====================

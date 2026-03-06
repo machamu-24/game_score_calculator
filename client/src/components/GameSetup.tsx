@@ -6,9 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGame } from "@/contexts/GameContext";
 import { haptics } from "@/lib/haptics";
 import { usePlayer } from "@/contexts/PlayerContext";
-import { DEFAULT_SETTINGS, Player } from "@/lib/types";
+import { DEFAULT_SETTINGS, GameSettings, Player } from "@/lib/types";
 import { nanoid } from "nanoid";
-import { Play, Users, ChevronDown, UserPlus } from "lucide-react";
+import { Play, Users, ChevronDown, UserPlus, ChevronUp } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,12 +25,21 @@ export function GameSetup() {
   const { startNewSession } = useGame();
   const { registeredPlayers } = usePlayer();
   const [showManager, setShowManager] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   
   const [players, setPlayers] = useState<Player[]>([
     { id: nanoid(), name: "プレイヤー 1", color: PLAYER_COLORS[0] },
     { id: nanoid(), name: "プレイヤー 2", color: PLAYER_COLORS[1] },
     { id: nanoid(), name: "プレイヤー 3", color: PLAYER_COLORS[2] },
     { id: nanoid(), name: "プレイヤー 4", color: PLAYER_COLORS[3] },
+  ]);
+
+  // ウマ・オカ設定
+  const [rankPoints, setRankPoints] = useState<[string, string, string, string]>([
+    String(DEFAULT_SETTINGS.rankPoints[0]),
+    String(DEFAULT_SETTINGS.rankPoints[1]),
+    String(DEFAULT_SETTINGS.rankPoints[2]),
+    String(DEFAULT_SETTINGS.rankPoints[3]),
   ]);
 
   const handleNameChange = (id: string, name: string) => {
@@ -43,7 +52,14 @@ export function GameSetup() {
 
   const handleStart = () => {
     if (localStorage.getItem('haptics-enabled') !== 'false') haptics.heavy();
-    startNewSession(players, DEFAULT_SETTINGS);
+    
+    // ウマ・オカ設定を解析
+    const parsedPoints = rankPoints.map(p => parseInt(p));
+    const settings: GameSettings = parsedPoints.some(isNaN)
+      ? DEFAULT_SETTINGS
+      : { rankPoints: parsedPoints as [number, number, number, number] };
+    
+    startNewSession(players, settings);
   };
 
   return (
@@ -122,6 +138,54 @@ export function GameSetup() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* ウマ・オカ設定（折りたたみ） */}
+          <div className="border border-white/10 rounded-xl overflow-hidden">
+            <button
+              type="button"
+              className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+              onClick={() => setShowSettings(!showSettings)}
+            >
+              <span>順位点設定（ウマ・オカ）</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground/70">
+                  {rankPoints.join(' / ')}
+                </span>
+                {showSettings ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+              </div>
+            </button>
+
+            {showSettings && (
+              <div className="px-4 pb-4 space-y-3 border-t border-white/10">
+                <p className="text-xs text-muted-foreground pt-3">
+                  1位〜4位に付与されるポイントを設定してください。
+                </p>
+                <div className="grid grid-cols-4 gap-2">
+                  {rankPoints.map((point, index) => (
+                    <div key={index} className="space-y-1">
+                      <Label className="text-xs text-center block text-muted-foreground">
+                        {index + 1}位
+                      </Label>
+                      <Input
+                        type="number"
+                        value={point}
+                        onChange={(e) => {
+                          const newPoints = [...rankPoints] as [string, string, string, string];
+                          newPoints[index] = e.target.value;
+                          setRankPoints(newPoints);
+                        }}
+                        className="text-center glass-input font-mono h-10 text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
 

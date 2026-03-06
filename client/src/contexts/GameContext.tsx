@@ -76,18 +76,28 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       return null;
     }
 
-    const playerIds = activeSessionData.players.map((p: Player) => p.id);
+    const playerIds = activeSessionData.players.map((p: any) => p.id);
+    const normalizedChipLogs = activeSessionData.chipLogs.map((c: any) => ({
+      ...c,
+      note: c.note ?? undefined,
+    }));
     const totalGamePoints = calculateTotalPoints(activeSessionData.games, playerIds);
-    const totalChips = calculateTotalChips(activeSessionData.chipLogs, playerIds);
+    const totalChips = calculateTotalChips(normalizedChipLogs, playerIds);
     const grandTotal = calculateGrandTotal(totalGamePoints, totalChips, playerIds);
 
     return {
       id: activeSessionData.id,
       startedAt: activeSessionData.startedAt,
-      players: activeSessionData.players,
+      players: activeSessionData.players.map((p: any) => ({
+        ...p,
+        color: p.color ?? undefined,
+      })),
       settings: { rankPoints: activeSessionData.rankPoints },
       games: activeSessionData.games,
-      chipLogs: activeSessionData.chipLogs,
+      chipLogs: activeSessionData.chipLogs.map((c: any) => ({
+        ...c,
+        note: c.note ?? undefined,
+      })),
       totalGamePoints,
       totalChips,
       grandTotal,
@@ -170,12 +180,19 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  // 設定更新
+  const updateSettingsMutation = trpc.session.updateSettings.useMutation({
+    onSuccess: () => {
+      utils.session.getActive.invalidate();
+    },
+  });
+
   const updateSettings = (newSettings: GameSettings) => {
     if (!session) return;
-
-    // TODO: 設定変更機能は後で実装
-    // 現在はsessionがuseMemoで管理されているため、直接更新できない
-    console.warn('updateSettings is not implemented yet');
+    updateSettingsMutation.mutate({
+      sessionId: session.id,
+      rankPoints: newSettings.rankPoints,
+    });
   };
 
   const resetSession = async () => {

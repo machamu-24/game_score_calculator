@@ -16,8 +16,12 @@ const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 export function PlayerProvider({ children }: { children: ReactNode }) {
   const utils = trpc.useUtils();
   
-  // プレイヤーリストを取得
-  const { data: registeredPlayers = [], isLoading } = trpc.players.list.useQuery();
+  // プレイヤーリストを取得（DBのnullをundefinedに変換し型を合わせる）
+  const { data: rawPlayers = [], isLoading } = trpc.players.list.useQuery();
+  const registeredPlayers: RegisteredPlayer[] = rawPlayers.map(p => ({
+    ...p,
+    color: p.color ?? undefined,
+  }));
 
   // プレイヤー追加
   const createMutation = trpc.players.create.useMutation({

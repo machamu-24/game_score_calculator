@@ -33,10 +33,10 @@ export function DataManagement() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const content = event.target?.result as string;
       if (content) {
-        const success = importHistory(content);
+        const success = await importHistory(content);
         setImportStatus(success ? 'success' : 'error');
         // Reset file input
         if (fileInputRef.current) {
